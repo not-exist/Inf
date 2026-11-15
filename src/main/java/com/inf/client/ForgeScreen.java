@@ -19,6 +19,10 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     private static final int PANEL_WIDTH = 176;
     private static final int PANEL_HEIGHT = 222;
 
+    private Button forgeButton;
+    private Button bankButton;
+    private Button frenzyButton;
+
     public ForgeScreen(ForgeMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = PANEL_WIDTH;
@@ -28,21 +32,34 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     @Override
     protected void init() {
         super.init();
-        addRenderableWidget(Button.builder(
+        forgeButton = addRenderableWidget(Button.builder(
                         Component.translatable("gui.inf.forge.forge"),
                         button -> sendAction(ForgeMenu.ACTION_STRIKE))
                 .bounds(leftPos + 16, topPos + 118, 72, 20)
                 .build());
-        addRenderableWidget(Button.builder(
+        bankButton = addRenderableWidget(Button.builder(
                         Component.translatable("gui.inf.forge.bank"),
                         button -> sendAction(ForgeMenu.ACTION_STOP))
                 .bounds(leftPos + 92, topPos + 118, 36, 20)
                 .build());
-        addRenderableWidget(Button.builder(
+        frenzyButton = addRenderableWidget(Button.builder(
                         Component.translatable("gui.inf.forge.frenzy"),
                         button -> sendAction(ForgeMenu.ACTION_FRENZY))
                 .bounds(leftPos + 132, topPos + 118, 28, 20)
                 .build());
+        updateButtons();
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        updateButtons();
+    }
+
+    private void updateButtons() {
+        forgeButton.active = menu.hasBlade() && menu.hasHammer();
+        bankButton.active = menu.hasBlade() && menu.outputEmpty() && menu.value() > 0;
+        frenzyButton.active = menu.frenzyReady() && menu.hasBlade() && menu.value() > 0;
     }
 
     private void sendAction(int action) {

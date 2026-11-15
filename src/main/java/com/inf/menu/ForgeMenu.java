@@ -2,6 +2,7 @@ package com.inf.menu;
 
 import com.inf.block.ForgeBlockEntity;
 import com.inf.block.ForgeData;
+import com.inf.forge.ForgeService;
 import com.inf.item.BladeBlankItem;
 import com.inf.item.HammerItem;
 import com.inf.item.component.BladeData;
@@ -9,6 +10,7 @@ import com.inf.registry.ModDataComponents;
 import com.inf.registry.ModMenus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -121,6 +123,19 @@ public class ForgeMenu extends AbstractContainerMenu {
     public BladeData bladeData() {
         ItemStack stack = blockEntity.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE);
         return stack.isEmpty() ? null : stack.get(ModDataComponents.BLADE_DATA.get());
+    }
+
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return false;
+        }
+        return switch (id) {
+            case ACTION_STRIKE -> ForgeService.strike(blockEntity, serverPlayer);
+            case ACTION_STOP -> ForgeService.stop(blockEntity, serverPlayer);
+            case ACTION_FRENZY -> ForgeService.activateFrenzy(blockEntity, serverPlayer);
+            default -> false;
+        };
     }
 
     @Override
