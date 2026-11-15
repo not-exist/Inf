@@ -26,6 +26,9 @@ public final class WeaponFactory {
                         Component.translatable(kind.translationKey())));
         stack.set(DataComponents.RARITY, rarity(tier));
         WeaponAttributeApplier.apply(stack, kind, tier);
+        if (kind == WeaponKind.PICKAXE || kind == WeaponKind.AXE) {
+            stack.set(DataComponents.TOOL, WeaponToolFactory.build(kind, tier));
+        }
         return stack;
     }
 
