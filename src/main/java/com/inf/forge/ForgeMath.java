@@ -12,7 +12,7 @@ public final class ForgeMath {
 
     public static int valueGain(int strikes, int gainRoll0to99, ForgeBalance balance) {
         int roll = Math.max(0, Math.min(99, gainRoll0to99));
-        int progress = Math.min(strikes / 2, 10);
+        int progress = Math.min(strikes / 2 * balance.gainPerStrike(), 10);
         return Math.max(
                 balance.minGain(),
                 balance.baseGain() + progress + roll * balance.gainVariance() / 100);

@@ -66,7 +66,7 @@ Frenzy：同类武器完成 10 把 → 下一次锻造窗口内 3 锤不会碎
 公式（纯函数，便于单测与模拟）：
 
 ```
-gain = max(minGain, baseGain + min(strikes / 2, 10) + gainRoll * gainVariance / 100)
+gain = max(minGain, baseGain + min(strikes / 2 * gainPerStrike, 10) + gainRoll * gainVariance / 100)
 risk = min(maxRisk, baseRisk + riskPerStrike * strikes + riskPerValue * value)
 break if breakRoll < risk          // breakRoll, gainRoll 均由服务端 RNG 产生
 ```
