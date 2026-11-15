@@ -21,4 +21,16 @@ class HarvestRulesTest {
         assertFalse(HarvestRules.canHarvest(1, true, 2));
         assertTrue(HarvestRules.canHarvest(2, true, 2));
     }
+
+    @Test
+    void diamondDropsRequireLevelFour() {
+        assertTrue(HarvestRules.deniesDiamondDrops(3));
+        assertFalse(HarvestRules.deniesDiamondDrops(4));
+    }
+
+    @Test
+    void ironDropsRequireLevelTwo() {
+        assertTrue(HarvestRules.deniesIronDrops(1));
+        assertFalse(HarvestRules.deniesIronDrops(2));
+    }
 }
