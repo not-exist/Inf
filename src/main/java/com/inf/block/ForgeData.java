@@ -1,5 +1,6 @@
 package com.inf.block;
 
+import com.inf.InfConfig;
 import com.inf.forge.ForgeBalance;
 import com.inf.forge.ForgeMath;
 import com.inf.item.component.BladeData;
@@ -20,7 +21,8 @@ public final class ForgeData implements ContainerData {
     public static final int GAIN_MAX = 6;
     public static final int FRENZY_PROGRESS = 7;
     public static final int FRENZY_ACTIVE = 8;
-    public static final int SIZE = 9;
+    public static final int FRENZY_REQUIRED = 9;
+    public static final int SIZE = 10;
 
     private final ForgeBlockEntity blockEntity;
     private final Player player;
@@ -49,6 +51,7 @@ public final class ForgeData implements ContainerData {
             case GAIN_MAX -> data == null ? 0 : ForgeMath.valueGain(strikes, 99, balance);
             case FRENZY_PROGRESS -> data == null ? 0 : player.getData(ModAttachments.FRENZY).progress(data.kind());
             case FRENZY_ACTIVE -> blockEntity.frenzyStrikesLeft();
+            case FRENZY_REQUIRED -> InfConfig.frenzyRequired();
             default -> 0;
         };
     }

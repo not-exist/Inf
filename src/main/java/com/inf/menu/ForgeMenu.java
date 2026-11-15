@@ -116,6 +116,10 @@ public class ForgeMenu extends AbstractContainerMenu {
         return data.get(ForgeData.FRENZY_ACTIVE);
     }
 
+    public int frenzyRequired() {
+        return data.get(ForgeData.FRENZY_REQUIRED);
+    }
+
     public boolean hasBlade() {
         return slots.get(SLOT_BLADE).hasItem();
     }
@@ -148,7 +152,9 @@ public class ForgeMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.distanceToSqr(blockEntity.getBlockPos().getCenter()) <= 64.0;
+        BlockPos pos = blockEntity.getBlockPos();
+        boolean sameBlockEntity = player.level().getBlockEntity(pos) == blockEntity;
+        return ForgeMenuRules.stillValid(sameBlockEntity, player.distanceToSqr(pos.getCenter()));
     }
 
     @Override
