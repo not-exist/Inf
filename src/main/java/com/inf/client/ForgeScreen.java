@@ -143,6 +143,17 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
                 62,
                 riskColor(),
                 false);
+        if (!menu.hasBlade() || !menu.hasHammer()) {
+            graphics.drawString(
+                    font,
+                    Component.translatable("gui.inf.forge.empty_hint"),
+                    8,
+                    82,
+                    0xFFB3A18A,
+                    false);
+            return;
+        }
+
         graphics.drawString(
                 font,
                 Component.translatable("gui.inf.forge.strikes", menu.strikes()),
@@ -164,18 +175,8 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
             frenzyText = Component.translatable("gui.inf.forge.frenzy_ready");
         } else {
             frenzyText = Component.translatable(
-                    "gui.inf.forge.frenzy_progress", menu.frenzyProgress(), InfConfig.frenzyRequired());
+                    "gui.inf.forge.frenzy_progress", menu.frenzyProgress(), menu.frenzyRequired());
         }
         graphics.drawString(font, frenzyText, 44, 106, 0xFFB3A18A, false);
-
-        if (!menu.hasBlade() || !menu.hasHammer()) {
-            graphics.drawString(
-                    font,
-                    Component.translatable("gui.inf.forge.empty_hint"),
-                    8,
-                    108,
-                    0xFFB3A18A,
-                    false);
-        }
     }
 }
