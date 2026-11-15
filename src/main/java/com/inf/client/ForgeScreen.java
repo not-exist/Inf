@@ -137,15 +137,16 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
                 94,
                 0xFFB3A18A,
                 false);
-        graphics.drawString(
-                font,
-                Component.translatable(
-                        "gui.inf.forge.frenzy_progress", menu.frenzyReady() ? InfConfig.frenzyRequired() : 0,
-                        InfConfig.frenzyRequired()),
-                44,
-                106,
-                0xFFB3A18A,
-                false);
+        Component frenzyText;
+        if (menu.frenzyActive() > 0) {
+            frenzyText = Component.translatable("gui.inf.forge.frenzy_active", menu.frenzyActive());
+        } else if (menu.frenzyReady()) {
+            frenzyText = Component.translatable("gui.inf.forge.frenzy_ready");
+        } else {
+            frenzyText = Component.translatable(
+                    "gui.inf.forge.frenzy_progress", menu.frenzyProgress(), InfConfig.frenzyRequired());
+        }
+        graphics.drawString(font, frenzyText, 44, 106, 0xFFB3A18A, false);
 
         if (!menu.hasBlade() || !menu.hasHammer()) {
             graphics.drawString(

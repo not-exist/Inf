@@ -5,6 +5,7 @@ import com.inf.block.ForgeBlockEntity;
 import com.inf.item.BladeBlankItem;
 import com.inf.item.HammerItem;
 import com.inf.item.component.BladeData;
+import com.inf.registry.ModAttachments;
 import com.inf.registry.ModDataComponents;
 import com.inf.weapon.WeaponKind;
 import net.minecraft.core.particles.ParticleTypes;
@@ -121,9 +122,25 @@ public final class ForgeService {
     }
 
     public static void onWeaponCompleted(ServerPlayer player, WeaponKind kind) {
+        player.setData(
+                ModAttachments.FRENZY,
+                player.getData(ModAttachments.FRENZY).onWeaponCompleted(kind, InfConfig.frenzyRequired()));
     }
 
     public static boolean activateFrenzy(ForgeBlockEntity blockEntity, ServerPlayer player) {
-        return false;
+        if (!(blockEntity.getLevel() instanceof ServerLevel level)) {
+            return false;
+        }
+        ItemStack blade = blockEntity.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE);
+        BladeData data = blade.get(ModDataComponents.BLADE_DATA.get());
+        FrenzyState state = player.getData(ModAttachments.FRENZY);
+        if (data == null || data.value() <= 0 || !state.ready()) {
+            return false;
+        }
+        blockEntity.setFrenzyStrikesLeft(InfConfig.frenzyFreeStrikes());
+        player.setData(ModAttachments.FRENZY, state.activated());
+        level.playSound(null, blockEntity.getBlockPos(), SoundEvents.BLAZE_SHOOT, SoundSource.BLOCKS, 0.5F, 1.2F);
+        blockEntity.setChanged();
+        return true;
     }
 }
