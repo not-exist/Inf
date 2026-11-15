@@ -2,6 +2,7 @@ package com.inf.registry;
 
 import com.inf.Inf;
 import com.inf.item.BladeBlankItem;
+import com.inf.item.HammerItem;
 import com.inf.item.forged.ForgedAxeItem;
 import com.inf.item.forged.ForgedDaggerItem;
 import com.inf.item.forged.ForgedPickaxeItem;
@@ -15,8 +16,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Inf.MODID);
 
-    public static final DeferredItem<Item> HAMMER =
-            ITEMS.registerSimpleItem("hammer", new Item.Properties().durability(128).stacksTo(1));
+    public static final DeferredItem<HammerItem> HAMMER = ITEMS.registerItem(
+            "hammer", HammerItem::new, new Item.Properties().durability(HammerItem.DURABILITY).stacksTo(1));
 
     public static final DeferredItem<BladeBlankItem> SWORD_BLANK = ITEMS.register(
             "sword_blank", () -> new BladeBlankItem(WeaponKind.SWORD, new Item.Properties().stacksTo(1)));
