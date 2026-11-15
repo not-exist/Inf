@@ -473,16 +473,16 @@ git commit -m "feat: add forging hammer and crafting recipes"
 
 方块属性：`strength(3.5F).requiresCorrectToolForDrops()`，`BaseEntityBlock`，`getRenderShape → MODEL`，`useWithoutItem` 打开菜单。方块实体实现 `MenuProvider`，内部 `ItemStackHandler(3)`（重写 `onContentsChanged` 调 `setChanged()`），`saveAdditional/loadAdditional` 序列化槽位、`lastStrikeGameTime`、`frenzyStrikesLeft`。`ForgeBlock.onRemove` 在服务端调用 `be.dropContents(serverLevel)`（逐个 `Block.popResource` 后清空），确保破坏/替换方块不吞物品。`ForgeData.get` 最终按 Task 2 的公式计算；本任务先返回 0，Task 7 实现。
 
-`ForgeMenu` 三个槽位坐标：刀胚 `(16,26)`、锤子 `(16,52)`、产出 `(16,78)`；刀胚槽 `mayPlace` 仅接受 `BladeBlankItem`（锻打后仍是该物品，只是多了 `BLADE_DATA`），锤子槽仅接受 `HammerItem`，产出槽 `mayPlace=false`。`stillValid` 用玩家与方块距离平方 ≤ 64。`ForgeScreen` 严格按设计文档 §6.1 实现 176×166 面板：标题栏、三个 18×18 内凹槽、价值条 `(44,50,116,6)`、风险条 `(44,72,116,4)`、三个按钮 `y=122`、底部提示；空状态显示幽灵图标与提示，按钮禁用。GUI 图集 `forge_table.png` 的图集坐标在 `ForgeScreen` 里用常量命名（`PANEL`、`SLOT`、`BUTTON` 等），不要散落魔法数字。
+`ForgeMenu` 三个槽位坐标：刀胚 `(16,26)`、锤子 `(16,52)`、产出 `(16,78)`；刀胚槽 `mayPlace` 仅接受 `BladeBlankItem`（锻打后仍是该物品，只是多了 `BLADE_DATA`），锤子槽仅接受 `HammerItem`，产出槽 `mayPlace=false`。再追加玩家背包 3×9（`x=8+列×18`，`y=140+行×18`）与快捷栏 9 格（`y=198`），否则玩家无法把物品放进锻刀台。`stillValid` 用玩家与方块距离平方 ≤ 64。`ForgeScreen` 严格按设计文档 §6.1 实现 176×222 面板：标题栏、三个 18×18 内凹槽、价值条 `(44,50,116,6)`、风险条 `(44,72,116,4)`、三个按钮 `y=118`、空槽提示 `y=108`；空状态显示幽灵图标与提示，按钮禁用。GUI 图集 `forge_table.png` 的图集坐标在 `ForgeScreen` 里用常量命名（`PANEL`、`SLOT`、`BUTTON` 等），不要散落魔法数字。
 
-`forge_table.png` 的固定分区（256×256）：面板 `(0,0,176,166)`；槽位三态 `(176,0)/(196,0)/(216,0)` 各 18×18；图标 8×8 放在 `(176,20)/(188,20)/(200,20)`（铁砧/锤/火焰）；三行按钮状态图 `y=176/198/220`，锻打 `x=0` 72×20、停手 `x=76` 36×20、狂热 `x=116` 28×20；价值条框 `(0,242,116,6)`、风险条框 `(0,250,116,4)`。条形填充与风险三档颜色由 `GuiGraphics.fill` 用设计 §6.1 的语义色绘制，不占图集。
+`forge_table.png` 的固定分区（256×256）：面板 `(0,0,176,222)`（含玩家背包槽底）；槽位三态 `(176,0)/(196,0)/(216,0)` 各 18×18；图标 8×8 放在 `(176,20)/(188,20)/(200,20)`（铁砧/锤/火焰）；按钮三态各占三行：锻打 `x=176,y=32/54/76` 72×20、停手 `x=176,y=98/120/142` 36×20、狂热 `x=176,y=164/186/208` 28×20；价值条框 `(0,230,116,6)`、风险条框 `(0,242,116,4)`。条形填充与风险三档颜色由 `GuiGraphics.fill` 用设计 §6.1 的语义色绘制，不占图集。
 
 资源：方块模型用 `minecraft:block/anvil` 贴图占位（`{"parent":"minecraft:block/cube_all","textures":{"all":"minecraft:block/anvil"}}`），方块状态与物品模型指向它；战利品表掉落自身；两个标签文件把 `inf:forge_table` 加入 `minecraft:mineable/pickaxe` 与 `minecraft:needs_iron_tool`；`forge_table.json` 配方为 `["III", " A ", "III"]`（`I = iron_ingot`，`A = minecraft:anvil`）。
 
 - [ ] **Step 2: 构建与客户端验证空壳**
 
 Run: `./gradlew build && ./gradlew runClient`
-Expected: `BUILD SUCCESSFUL`；`/give @s inf:forge_table` 后放置，右键打开 GUI；面板、槽位、价值/风险条、三个按钮的位置与设计 §6.1 一致；空状态显示“放入刀胚与锤子”，锻打/停手/狂热均禁用。
+Expected: `BUILD SUCCESSFUL`；`/give @s inf:forge_table` 后放置，右键打开 GUI；面板、槽位、价值/风险条、三个按钮与玩家背包的位置与设计 §6.1 一致；空状态显示“放入刀胚与锤子”，锻打/停手/狂热均禁用。
 
 - [ ] **Step 3: 验证错误物品被拒绝与破坏掉落**
 
