@@ -20,4 +20,12 @@ public final class HarvestRules {
     public static boolean canHarvest(int harvestLevel, boolean requiresCorrectTool, int requiredLevel) {
         return !requiresCorrectTool || harvestLevel >= requiredLevel;
     }
+
+    public static boolean deniesIronDrops(int harvestLevel) {
+        return harvestLevel < 2;
+    }
+
+    public static boolean deniesDiamondDrops(int harvestLevel) {
+        return harvestLevel < 4;
+    }
 }

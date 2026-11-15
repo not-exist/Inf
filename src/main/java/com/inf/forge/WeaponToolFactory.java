@@ -1,5 +1,6 @@
 package com.inf.forge;
 
+import com.inf.weapon.HarvestRules;
 import com.inf.weapon.WeaponKind;
 import com.inf.weapon.WeaponStats;
 import com.inf.weapon.WeaponStatsTable;
@@ -18,10 +19,10 @@ public final class WeaponToolFactory {
     public static Tool build(WeaponKind kind, WeaponTier tier) {
         WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
         List<Tool.Rule> rules = new ArrayList<>();
-        if (stats.harvestLevel() < 2) {
+        if (HarvestRules.deniesIronDrops(stats.harvestLevel())) {
             rules.add(Tool.Rule.deniesDrops(BlockTags.NEEDS_IRON_TOOL));
         }
-        if (stats.harvestLevel() < 3) {
+        if (HarvestRules.deniesDiamondDrops(stats.harvestLevel())) {
             rules.add(Tool.Rule.deniesDrops(BlockTags.NEEDS_DIAMOND_TOOL));
         }
         TagKey<Block> mineable =
