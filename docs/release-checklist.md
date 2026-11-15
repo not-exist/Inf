@@ -5,7 +5,7 @@ Verified in a headless environment (no display, client GUI not launched).
 ## Automated
 
 - [x] `./gradlew clean test build` — BUILD SUCCESSFUL.
-- [x] 31 unit tests, 0 failures (`build/test-results/test/*.xml`).
+- [x] 36 unit tests, 0 failures (`build/test-results/test/*.xml`).
 - [x] `./gradlew runServer` — `Done (0.318s)`, no registry or data-pack errors.
 - [x] Jar produced: `build/libs/inf-0.1.0.jar`.
 
