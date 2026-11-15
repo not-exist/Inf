@@ -20,7 +20,7 @@ Frenzy: finishing 10 weapons of the same kind charges a window of 3 unbreakable 
 
 - Hammer: shapeless iron block + blaze rod.
 - Blanks: iron ingots + sticks (sword 2+1, pickaxe/axe/scythe 3+2, dagger 1+1).
-- Forge Table: 3×3 iron ingot ring around an anvil.
+- Forge Table: 3×3 with six iron ingots around an anvil (`III` / ` A ` / `III`).
 
 ## Build
 
