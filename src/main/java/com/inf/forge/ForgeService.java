@@ -50,6 +50,7 @@ public final class ForgeService {
 
         if (outcome.broken()) {
             blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, ItemStack.EMPTY);
+            blockEntity.setFrenzyStrikesLeft(0);
             level.playSound(null, blockEntity.getBlockPos(), SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 0.9F, 0.9F);
             level.sendParticles(
                     ParticleTypes.CRIT,
@@ -115,6 +116,7 @@ public final class ForgeService {
         ItemStack weapon = WeaponFactory.create(data.kind(), data.value(), data.strikes(), data.seed());
         blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_OUTPUT, weapon);
         blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, ItemStack.EMPTY);
+        blockEntity.setFrenzyStrikesLeft(0);
         level.playSound(null, blockEntity.getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.6F, 1.0F);
         blockEntity.setChanged();
         onWeaponCompleted(player, data.kind());

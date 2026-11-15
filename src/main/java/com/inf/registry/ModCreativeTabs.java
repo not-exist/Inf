@@ -19,6 +19,7 @@ public final class ModCreativeTabs {
                     .icon(() -> new ItemStack(ModItems.FORGED_SWORD.get()))
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.HAMMER.get());
+                        output.accept(ModBlocks.FORGE_TABLE_ITEM.get());
                         output.accept(ModItems.SWORD_BLANK.get());
                         output.accept(ModItems.PICKAXE_BLANK.get());
                         output.accept(ModItems.AXE_BLANK.get());

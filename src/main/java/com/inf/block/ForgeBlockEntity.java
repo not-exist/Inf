@@ -26,6 +26,9 @@ public class ForgeBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler inventory = new ItemStackHandler(3) {
         @Override
         protected void onContentsChanged(int slot) {
+            if (slot == SLOT_BLADE && getStackInSlot(slot).isEmpty()) {
+                frenzyStrikesLeft = 0;
+            }
             setChanged();
         }
     };
