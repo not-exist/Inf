@@ -5,8 +5,8 @@ Config file: `config/inf-common.toml` (server-side COMMON config).
 | Key | Default | Range | Effect |
 |---|---:|---|---|
 | `baseRisk` | `0.015` | 0–1 | Shatter chance of the first strike. |
-| `riskPerStrike` | `0.0012` | 0–1 | Added shatter chance per completed strike on the same blade. |
-| `riskPerValue` | `0.00003` | 0–1 | Added shatter chance per point of blade value. |
+| `riskPerStrike` | `0.0015` | 0–1 | Added shatter chance per completed strike on the same blade. |
+| `riskPerValue` | `0.000035` | 0–1 | Added shatter chance per point of blade value. |
 | `maxRisk` | `0.85` | 0–1 | Hard cap on shatter chance. |
 | `baseGain` | `12` | 0–1000 | Base value gained by a successful strike. |
 | `gainPerStrike` | `1` | 0–1000 | Progress bonus; the formula adds `min(strikes / 2 * gainPerStrike, 10)`. |

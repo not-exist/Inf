@@ -112,7 +112,7 @@ git commit -m "chore: bootstrap NeoForge 1.21.1 project for Inf"
 - Produces:
   - `enum WeaponKind { SWORD, PICKAXE, AXE, SCYTHE, DAGGER }`，字段 `public final String id`，方法 `translationKey()`、`static WeaponKind byId(String id)`（未知 id 抛 `IllegalArgumentException`）
   - `enum WeaponTier { CRUDE, COMMON, FINE, RARE, EPIC, LEGENDARY }`，方法 `static WeaponTier forValue(int value)`、`translationKey()`
-  - `record ForgeBalance(double baseRisk, double riskPerStrike, double riskPerValue, double maxRisk, int baseGain, int gainPerStrike, int gainVariance, int minGain)`，常量 `DEFAULT = new ForgeBalance(0.015, 0.0012, 0.00003, 0.85, 12, 1, 8, 4)`
+  - `record ForgeBalance(double baseRisk, double riskPerStrike, double riskPerValue, double maxRisk, int baseGain, int gainPerStrike, int gainVariance, int minGain)`，常量 `DEFAULT = new ForgeBalance(0.015, 0.0015, 0.000035, 0.85, 12, 1, 8, 4)`
   - `record StrikeOutcome(int value, int strikes, boolean broken, int gain, double breakChance)`
   - `ForgeMath.breakChance(int value, int strikes, ForgeBalance b) -> double`
   - `ForgeMath.valueGain(int strikes, int gainRoll0to99, ForgeBalance b) -> int`

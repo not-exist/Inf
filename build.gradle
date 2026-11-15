@@ -188,6 +188,12 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.register('balanceSim', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.inf.tools.BalanceSim'
+}
+
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {

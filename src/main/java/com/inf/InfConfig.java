@@ -9,9 +9,9 @@ public final class InfConfig {
     private static final ModConfigSpec.DoubleValue BASE_RISK =
             BUILDER.comment("Base shatter chance of the first strike.").defineInRange("baseRisk", 0.015, 0.0, 1.0);
     private static final ModConfigSpec.DoubleValue RISK_PER_STRIKE =
-            BUILDER.defineInRange("riskPerStrike", 0.0012, 0.0, 1.0);
+            BUILDER.defineInRange("riskPerStrike", 0.0015, 0.0, 1.0);
     private static final ModConfigSpec.DoubleValue RISK_PER_VALUE =
-            BUILDER.defineInRange("riskPerValue", 0.00003, 0.0, 1.0);
+            BUILDER.defineInRange("riskPerValue", 0.000035, 0.0, 1.0);
     private static final ModConfigSpec.DoubleValue MAX_RISK =
             BUILDER.defineInRange("maxRisk", 0.85, 0.0, 1.0);
     private static final ModConfigSpec.IntValue BASE_GAIN = BUILDER.defineInRange("baseGain", 12, 0, 1000);
