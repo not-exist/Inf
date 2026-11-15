@@ -6,6 +6,7 @@ import com.inf.item.BladeBlankItem;
 import com.inf.item.HammerItem;
 import com.inf.item.component.BladeData;
 import com.inf.registry.ModDataComponents;
+import com.inf.weapon.WeaponKind;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -99,7 +100,27 @@ public final class ForgeService {
     }
 
     public static boolean stop(ForgeBlockEntity blockEntity, ServerPlayer player) {
-        return false;
+        if (!(blockEntity.getLevel() instanceof ServerLevel level)) {
+            return false;
+        }
+        ItemStack blade = blockEntity.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE);
+        BladeData data = blade.get(ModDataComponents.BLADE_DATA.get());
+        if (data == null
+                || !WeaponSettlement.canStop(
+                        data.value(), blockEntity.inventory().getStackInSlot(ForgeBlockEntity.SLOT_OUTPUT).isEmpty())) {
+            return false;
+        }
+
+        ItemStack weapon = WeaponFactory.create(data.kind(), data.value(), data.strikes(), data.seed());
+        blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_OUTPUT, weapon);
+        blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, ItemStack.EMPTY);
+        level.playSound(null, blockEntity.getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.6F, 1.0F);
+        blockEntity.setChanged();
+        onWeaponCompleted(player, data.kind());
+        return true;
+    }
+
+    public static void onWeaponCompleted(ServerPlayer player, WeaponKind kind) {
     }
 
     public static boolean activateFrenzy(ForgeBlockEntity blockEntity, ServerPlayer player) {
