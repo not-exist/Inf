@@ -192,7 +192,7 @@ Expected: 编译失败，`ForgeMath` / `WeaponTier` 不存在。
 - `WeaponTier`：六个枚举值，字段 `minValue` 按设计文档 `0/100/240/450/720/1000`；`forValue` 返回满足 `value >= minValue` 的最高阶位；`translationKey()` 返回 `"inf.tier." + name().toLowerCase(Locale.ROOT)`。
 - `ForgeBalance`：record + `DEFAULT` 常量。
 - `ForgeMath`：
-  - `gain = Math.max(b.minGain(), b.baseGain() + Math.min(strikes / 2, 10) + gainRoll * b.gainVariance() / 100)`
+  - `gain = Math.max(b.minGain(), b.baseGain() + Math.min(strikes / 2 * b.gainPerStrike(), 10) + gainRoll * b.gainVariance() / 100)`
   - `risk = Math.min(b.maxRisk(), b.baseRisk() + b.riskPerStrike() * strikes + b.riskPerValue() * value)`
   - `broken = !frenzy && breakRoll < risk`
   - 成功时 `value + gain`、`strikes + 1`；破碎时价值与次数保持传入值、`gain = 0`。

@@ -22,31 +22,45 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     private Button forgeButton;
     private Button bankButton;
     private Button frenzyButton;
+    private float displayedValue;
 
     public ForgeScreen(ForgeMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = PANEL_WIDTH;
         this.imageHeight = PANEL_HEIGHT;
+        this.displayedValue = menu.value();
     }
 
     @Override
     protected void init() {
         super.init();
-        forgeButton = addRenderableWidget(Button.builder(
-                        Component.translatable("gui.inf.forge.forge"),
-                        button -> sendAction(ForgeMenu.ACTION_STRIKE))
-                .bounds(leftPos + 16, topPos + 118, 72, 20)
-                .build());
-        bankButton = addRenderableWidget(Button.builder(
-                        Component.translatable("gui.inf.forge.bank"),
-                        button -> sendAction(ForgeMenu.ACTION_STOP))
-                .bounds(leftPos + 92, topPos + 118, 36, 20)
-                .build());
-        frenzyButton = addRenderableWidget(Button.builder(
-                        Component.translatable("gui.inf.forge.frenzy"),
-                        button -> sendAction(ForgeMenu.ACTION_FRENZY))
-                .bounds(leftPos + 132, topPos + 118, 28, 20)
-                .build());
+        forgeButton = addRenderableWidget(new ForgeButton(
+                leftPos + 16,
+                topPos + 118,
+                72,
+                20,
+                Component.translatable("gui.inf.forge.forge"),
+                button -> sendAction(ForgeMenu.ACTION_STRIKE),
+                176,
+                32));
+        bankButton = addRenderableWidget(new ForgeButton(
+                leftPos + 92,
+                topPos + 118,
+                36,
+                20,
+                Component.translatable("gui.inf.forge.bank"),
+                button -> sendAction(ForgeMenu.ACTION_STOP),
+                176,
+                98));
+        frenzyButton = addRenderableWidget(new ForgeButton(
+                leftPos + 132,
+                topPos + 118,
+                28,
+                20,
+                Component.translatable("gui.inf.forge.frenzy"),
+                button -> sendAction(ForgeMenu.ACTION_FRENZY),
+                176,
+                164));
         updateButtons();
     }
 
@@ -54,6 +68,12 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     protected void containerTick() {
         super.containerTick();
         updateButtons();
+        float target = menu.value();
+        if (InfConfig.uiAnimations()) {
+            displayedValue += (target - displayedValue) * 0.25F;
+        } else {
+            displayedValue = target;
+        }
     }
 
     private void updateButtons() {
@@ -72,7 +92,7 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
 
-        int valueWidth = Math.min(116, menu.value() * 116 / 1000);
+        int valueWidth = Math.min(116, (int) (displayedValue * 116 / 1000));
         if (valueWidth > 0) {
             graphics.fill(leftPos + 45, topPos + 51, leftPos + 45 + valueWidth, topPos + 55, 0xFFE8622C);
         }
