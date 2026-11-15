@@ -3,6 +3,7 @@ package com.inf.block;
 import com.inf.forge.ForgeBalance;
 import com.inf.forge.ForgeMath;
 import com.inf.item.component.BladeData;
+import com.inf.registry.ModAttachments;
 import com.inf.registry.ModDataComponents;
 import com.inf.weapon.WeaponTier;
 import net.minecraft.world.entity.player.Player;
@@ -17,7 +18,9 @@ public final class ForgeData implements ContainerData {
     public static final int FRENZY_READY = 4;
     public static final int GAIN_MIN = 5;
     public static final int GAIN_MAX = 6;
-    public static final int SIZE = 7;
+    public static final int FRENZY_PROGRESS = 7;
+    public static final int FRENZY_ACTIVE = 8;
+    public static final int SIZE = 9;
 
     private final ForgeBlockEntity blockEntity;
     private final Player player;
@@ -41,9 +44,11 @@ public final class ForgeData implements ContainerData {
                     ? 0
                     : (int) Math.round(ForgeMath.breakChance(value, strikes, balance) * 1000.0);
             case TIER -> WeaponTier.forValue(value).ordinal();
-            case FRENZY_READY -> 0;
+            case FRENZY_READY -> player.getData(ModAttachments.FRENZY).ready() ? 1 : 0;
             case GAIN_MIN -> data == null ? 0 : ForgeMath.valueGain(strikes, 0, balance);
             case GAIN_MAX -> data == null ? 0 : ForgeMath.valueGain(strikes, 99, balance);
+            case FRENZY_PROGRESS -> data == null ? 0 : player.getData(ModAttachments.FRENZY).progress(data.kind());
+            case FRENZY_ACTIVE -> blockEntity.frenzyStrikesLeft();
             default -> 0;
         };
     }

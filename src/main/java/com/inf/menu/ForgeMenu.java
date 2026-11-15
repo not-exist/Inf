@@ -108,6 +108,14 @@ public class ForgeMenu extends AbstractContainerMenu {
         return data.get(ForgeData.GAIN_MAX);
     }
 
+    public int frenzyProgress() {
+        return data.get(ForgeData.FRENZY_PROGRESS);
+    }
+
+    public int frenzyActive() {
+        return data.get(ForgeData.FRENZY_ACTIVE);
+    }
+
     public boolean hasBlade() {
         return slots.get(SLOT_BLADE).hasItem();
     }

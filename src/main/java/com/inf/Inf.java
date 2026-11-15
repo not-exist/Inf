@@ -1,5 +1,6 @@
 package com.inf;
 
+import com.inf.registry.ModAttachments;
 import com.inf.registry.ModBlockEntities;
 import com.inf.registry.ModBlocks;
 import com.inf.registry.ModCreativeTabs;
@@ -21,6 +22,7 @@ public final class Inf {
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
+        ModAttachments.ATTACHMENTS.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, InfConfig.SPEC);
     }
