@@ -37,26 +37,26 @@ public class ForgeMenu extends AbstractContainerMenu {
         this.blockEntity = blockEntity;
         this.data = data;
 
-        addSlot(new SlotItemHandler(blockEntity.inventory(), ForgeBlockEntity.SLOT_BLADE, 16, 26) {
+        addSlot(new SlotItemHandler(blockEntity.inventory(), ForgeBlockEntity.SLOT_BLADE, 24, 48) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() instanceof BladeBlankItem;
             }
         });
-        addSlot(new SlotItemHandler(blockEntity.inventory(), ForgeBlockEntity.SLOT_HAMMER, 16, 52) {
+        addSlot(new SlotItemHandler(blockEntity.inventory(), ForgeBlockEntity.SLOT_HAMMER, 24, 78) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() instanceof HammerItem;
             }
         });
-        addSlot(new ForgeResultSlot(blockEntity.inventory(), ForgeBlockEntity.SLOT_OUTPUT, 16, 78));
+        addSlot(new ForgeResultSlot(blockEntity.inventory(), ForgeBlockEntity.SLOT_OUTPUT, 24, 108));
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, 8 + column * 18, 140 + row * 18));
+                addSlot(new Slot(playerInventory, column + row * 9 + 9, 246 + column * 18, 178 + row * 18));
             }
         }
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, 8 + column * 18, 198));
+            addSlot(new Slot(playerInventory, column, 246 + column * 18, 236));
         }
         addDataSlots(data);
     }
@@ -114,6 +114,22 @@ public class ForgeMenu extends AbstractContainerMenu {
 
     public int frenzyActive() {
         return data.get(ForgeData.FRENZY_ACTIVE);
+    }
+
+    public int breakPermille() {
+        return data.get(ForgeData.BREAK_PERMILLE);
+    }
+
+    public int damagePermille() {
+        return data.get(ForgeData.DAMAGE_PERMILLE);
+    }
+
+    public int successPermille() {
+        return data.get(ForgeData.SUCCESS_PERMILLE);
+    }
+
+    public int greatPermille() {
+        return data.get(ForgeData.GREAT_PERMILLE);
     }
 
     public int frenzyRequired() {

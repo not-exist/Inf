@@ -11,7 +11,7 @@ public record ForgeBalance(
         int minGain) {
 
     public static final ForgeBalance DEFAULT =
-            new ForgeBalance(0.015, 0.0015, 0.000035, 0.85, 12, 1, 8, 4);
+            new ForgeBalance(0.015, 0.0014, 0.00003, 0.85, 12, 1, 8, 4);
 
     public static ForgeBalance of(
             double baseRisk,

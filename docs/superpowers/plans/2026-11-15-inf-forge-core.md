@@ -10,6 +10,11 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-15-inf-forge-design.md`
 
+> **2026-11-16 rework:** the GUI is now a 420×260 full-screen dashboard with
+> four outcome probabilities (BREAK/DAMAGE/SUCCESS/GREAT_SUCCESS), custom art,
+> and an advancement tree. Design §4 and §6 supersede the older 176×222 layout
+> described in Task 6. The rest of the task order still applies.
+
 ## Global Constraints
 
 - Minecraft `1.21.1`，NeoForge `21.1.x`，Java 21，官方 Mojang 映射；mod id `inf`，主类 `com.inf.Inf`。
@@ -112,7 +117,7 @@ git commit -m "chore: bootstrap NeoForge 1.21.1 project for Inf"
 - Produces:
   - `enum WeaponKind { SWORD, PICKAXE, AXE, SCYTHE, DAGGER }`，字段 `public final String id`，方法 `translationKey()`、`static WeaponKind byId(String id)`（未知 id 抛 `IllegalArgumentException`）
   - `enum WeaponTier { CRUDE, COMMON, FINE, RARE, EPIC, LEGENDARY }`，方法 `static WeaponTier forValue(int value)`、`translationKey()`
-  - `record ForgeBalance(double baseRisk, double riskPerStrike, double riskPerValue, double maxRisk, int baseGain, int gainPerStrike, int gainVariance, int minGain)`，常量 `DEFAULT = new ForgeBalance(0.015, 0.0015, 0.000035, 0.85, 12, 1, 8, 4)`
+  - `record ForgeBalance(double baseRisk, double riskPerStrike, double riskPerValue, double maxRisk, int baseGain, int gainPerStrike, int gainVariance, int minGain)`，常量 `DEFAULT = new ForgeBalance(0.015, 0.0014, 0.00003, 0.85, 12, 1, 8, 4)`
   - `record StrikeOutcome(int value, int strikes, boolean broken, int gain, double breakChance)`
   - `ForgeMath.breakChance(int value, int strikes, ForgeBalance b) -> double`
   - `ForgeMath.valueGain(int strikes, int gainRoll0to99, ForgeBalance b) -> int`

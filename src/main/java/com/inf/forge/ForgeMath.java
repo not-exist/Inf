@@ -21,15 +21,31 @@ public final class ForgeMath {
     public static StrikeOutcome strike(
             int value,
             int strikes,
-            double breakRoll,
+            double outcomeRoll,
             int gainRoll,
             boolean frenzy,
             ForgeBalance balance) {
-        double risk = breakChance(value, strikes, balance);
-        int gain = valueGain(strikes, gainRoll, balance);
-        if (!frenzy && breakRoll < risk) {
-            return new StrikeOutcome(value, strikes, true, 0, risk);
+        ForgeRates rates = ForgeRates.of(value, strikes, frenzy, balance);
+        ForgeOutcome outcome;
+        if (outcomeRoll < rates.breakChance()) {
+            outcome = ForgeOutcome.BREAK;
+        } else if (outcomeRoll < rates.breakChance() + rates.damageChance()) {
+            outcome = ForgeOutcome.DAMAGE;
+        } else if (outcomeRoll < rates.breakChance() + rates.damageChance() + rates.greatChance()) {
+            outcome = ForgeOutcome.GREAT_SUCCESS;
+        } else {
+            outcome = ForgeOutcome.SUCCESS;
         }
-        return new StrikeOutcome(value + gain, strikes + 1, false, gain, risk);
+
+        int gain = valueGain(strikes, gainRoll, balance);
+        return switch (outcome) {
+            case BREAK -> new StrikeOutcome(value, strikes, outcome, 0, 0, rates);
+            case DAMAGE -> {
+                int loss = Math.min(value, Math.max(1, value / 10));
+                yield new StrikeOutcome(value - loss, strikes + 1, outcome, 0, loss, rates);
+            }
+            case SUCCESS -> new StrikeOutcome(value + gain, strikes + 1, outcome, gain, 0, rates);
+            case GREAT_SUCCESS -> new StrikeOutcome(value + gain * 2, strikes + 1, outcome, gain * 2, 0, rates);
+        };
     }
 }

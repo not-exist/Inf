@@ -6,7 +6,9 @@ A Minecraft 1.21.1 (NeoForge) mod about forging blades. Every hammer strike rais
 
 1. Craft a **Forge Hammer** (iron block + blaze rod) and a blade blank.
 2. Put the blank and the hammer into the **Forge Table**.
-3. Strike. A strike adds value and raises the shatter risk; a failed strike destroys the blank.
+3. Strike. Each strike rolls one of four outcomes: **BREAK**, **DAMAGE**
+   (lose 10% value), **SUCCESS**, or **GREAT_SUCCESS** (double gain). The
+   four probabilities are listed live on the right side of the GUI.
 4. Stop before greed wins. The blade becomes a forged weapon named and coloured by its tier, with tier-specific attributes.
 5. Each strike costs one point of hammer durability. A hammer holds 128 strikes.
 
@@ -31,14 +33,28 @@ JAVA_HOME=/path/to/jdk-21 ./gradlew build
 JAVA_HOME=/path/to/jdk-21 ./gradlew runClient
 ```
 
-Output: `build/libs/inf-0.1.0.jar`. Tests: `./gradlew test`.
+Output: `build/libs/inf-0.2.0.jar`. Tests: `./gradlew test`.
 
 ## Configuration
 
 See `docs/configuration.md`.
 
+## UI and art
+
+The forge table opens a full-screen dark-forge scene with a 420×260 panel:
+anvil and slots on the left, blade/value in the centre, four outcome
+probabilities on the right, player inventory at the bottom right. All item,
+block and GUI textures are generated for this mod (`tools/gen_assets.py`), not
+reused from vanilla.
+
+## Advancements
+
+19 vanilla-style advancements cover the forge, all five weapon kinds, every
+tier, break/damage/great-success/Frenzy and the full armory. See
+`docs/advancement-tree.md`.
+
 ## Status
 
-Implemented: forging loop, five weapon kinds, tiers and attributes, hammer durability, Frenzy, tier colours and tooltips, forge table GUI.
+Implemented: forging loop with four outcomes, five weapon kinds, tiers and attributes, hammer durability, Frenzy, tier colours and tooltips, full-screen forge UI, advancement tree.
 
 Not in this version: dragon tribute, relic machine, heat/timing minigames, custom dimensions, material tiers.
