@@ -1,0 +1,35 @@
+{
+  "criteria": {
+    "get_hammer": {
+      "conditions": {
+        "items": [
+          {
+            "items": "inf:hammer"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "background": "inf:textures/gui/advancement_background.png",
+    "description": {
+      "translate": "advancements.inf.root.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "inf:forge_table"
+    },
+    "title": {
+      "translate": "advancements.inf.root.title"
+    },
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "requirements": [
+    [
+      "get_hammer"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

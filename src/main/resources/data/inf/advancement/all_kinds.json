@@ -1,0 +1,30 @@
+{
+  "parent": "inf:kind_dagger",
+  "criteria": {
+    "unlocked": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "minecraft:netherite_sword"
+    },
+    "title": {
+      "translate": "advancements.inf.all_kinds.title"
+    },
+    "description": {
+      "translate": "advancements.inf.all_kinds.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "requirements": [
+    [
+      "unlocked"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

@@ -1,0 +1,30 @@
+{
+  "parent": "inf:first_weapon",
+  "criteria": {
+    "unlocked": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "minecraft:blaze_powder"
+    },
+    "title": {
+      "translate": "advancements.inf.frenzy.title"
+    },
+    "description": {
+      "translate": "advancements.inf.frenzy.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "requirements": [
+    [
+      "unlocked"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
