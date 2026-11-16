@@ -1,0 +1,30 @@
+{
+  "parent": "inf:first_weapon",
+  "criteria": {
+    "unlocked": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "inf:forged_pickaxe"
+    },
+    "title": {
+      "translate": "advancements.inf.kind_pickaxe.title"
+    },
+    "description": {
+      "translate": "advancements.inf.kind_pickaxe.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "requirements": [
+    [
+      "unlocked"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

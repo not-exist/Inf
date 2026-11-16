@@ -1,0 +1,30 @@
+{
+  "parent": "inf:first_strike",
+  "criteria": {
+    "unlocked": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "inf:forged_sword"
+    },
+    "title": {
+      "translate": "advancements.inf.great_success.title"
+    },
+    "description": {
+      "translate": "advancements.inf.great_success.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "requirements": [
+    [
+      "unlocked"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
