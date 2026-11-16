@@ -38,19 +38,59 @@ class ForgeMathTest {
     }
 
     @Test
+    void rates_sumToOne() {
+        ForgeRates rates = ForgeRates.of(420, 18, false, B);
+        assertEquals(
+                1.0,
+                rates.breakChance() + rates.damageChance() + rates.successChance() + rates.greatChance(),
+                1e-9);
+    }
+
+    @Test
+    void frenzyRatesHaveNoBreakOrDamage() {
+        ForgeRates rates = ForgeRates.of(420, 18, true, B);
+        assertEquals(0.0, rates.breakChance(), 1e-9);
+        assertEquals(0.0, rates.damageChance(), 1e-9);
+        assertEquals(1.0, rates.successChance() + rates.greatChance(), 1e-9);
+    }
+
+    @Test
     void strike_breaksWhenRollIsBelowChance() {
-        assertTrue(ForgeMath.strike(0, 0, 0.0, 50, false, B).broken());
+        assertEquals(ForgeOutcome.BREAK, ForgeMath.strike(0, 0, 0.0, 50, false, B).outcome());
     }
 
     @Test
-    void strike_survivesWhenRollEqualsChance() {
-        double risk = ForgeMath.breakChance(0, 0, B);
-        assertFalse(ForgeMath.strike(0, 0, risk, 50, false, B).broken());
+    void strike_damagesInTheDamageBand() {
+        ForgeRates rates = ForgeRates.of(100, 10, false, B);
+        StrikeOutcome outcome = ForgeMath.strike(100, 10, rates.breakChance(), 50, false, B);
+        assertEquals(ForgeOutcome.DAMAGE, outcome.outcome());
+        assertTrue(outcome.value() < 100);
+        assertEquals(11, outcome.strikes());
+        assertTrue(outcome.loss() > 0);
     }
 
     @Test
-    void strike_frenzyNeverBreaksButStillGains() {
+    void strike_greatSuccessDoublesGain() {
+        ForgeRates rates = ForgeRates.of(100, 10, false, B);
+        double roll = rates.breakChance() + rates.damageChance();
+        StrikeOutcome outcome = ForgeMath.strike(100, 10, roll, 50, false, B);
+        assertEquals(ForgeOutcome.GREAT_SUCCESS, outcome.outcome());
+        assertEquals(ForgeMath.valueGain(10, 50, B) * 2, outcome.gain());
+        assertEquals(100 + outcome.gain(), outcome.value());
+    }
+
+    @Test
+    void strike_successAboveAllBands() {
+        StrikeOutcome outcome = ForgeMath.strike(100, 10, 0.999, 50, false, B);
+        assertEquals(ForgeOutcome.SUCCESS, outcome.outcome());
+        assertTrue(outcome.value() > 100);
+        assertFalse(outcome.broken());
+    }
+
+    @Test
+    void strike_frenzyNeverBreaksOrDamages() {
         StrikeOutcome outcome = ForgeMath.strike(0, 0, 0.0, 99, true, B);
+        assertEquals(ForgeOutcome.GREAT_SUCCESS, outcome.outcome());
         assertFalse(outcome.broken());
         assertTrue(outcome.value() > 0);
         assertEquals(1, outcome.strikes());

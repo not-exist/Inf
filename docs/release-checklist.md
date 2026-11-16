@@ -1,18 +1,23 @@
-# Release Checklist — v0.1.0
+# Release Checklist — v0.2.0
 
 Verified in a headless environment (no display, client GUI not launched).
 
 ## Automated
 
 - [x] `./gradlew clean test build` — BUILD SUCCESSFUL.
-- [x] 36 unit tests, 0 failures (`build/test-results/test/*.xml`).
+- [x] 40 unit tests, 0 failures (`build/test-results/test/*.xml`).
 - [x] `./gradlew runServer` — `Done (0.318s)`, no registry or data-pack errors.
 - [x] Jar produced: `build/libs/inf-0.1.0.jar`.
+- [x] 19 advancement files load (`Loaded 1418 advancements`, vanilla + 19).
+- [x] All item/block/GUI model texture references resolve; no vanilla item
+      texture is referenced by an Inf item model.
 
 ## Manual (requires a display)
 
 - [ ] Craft hammer, five blanks, forge table.
-- [ ] Insert blank + hammer; 10 strikes update value, risk, durability, gain range.
+- [ ] Insert blank + hammer; 10 strikes update value, all four outcome
+      probabilities, durability and gain range.
+- [ ] Check BREAK / DAMAGE / SUCCESS / GREAT_SUCCESS each fire and are announced.
 - [ ] Bank a blade; check name, tier colour, tooltip and attributes.
 - [ ] Break a blade; confirm the blank is destroyed and the hammer still wears.
 - [ ] Use the last hammer durability; confirm the strike resolves and the hammer breaks.
@@ -23,6 +28,7 @@ Verified in a headless environment (no display, client GUI not launched).
 - [ ] Scythe: long reach and wide sweep.
 - [ ] Pickaxe: obsidian at legendary, no drop at crude.
 - [ ] GUI scale 1/2/3, zh_cn/en_us: no clipping, no blur, all states legible.
+- [ ] Open the advancement tab; check the Inf branch and all 19 nodes.
 - [ ] `uiAnimations=false`: information remains complete.
 - [ ] Two clients: values stay in sync; server owns the rolls.
 

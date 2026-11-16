@@ -10,8 +10,8 @@ import net.minecraft.resources.ResourceLocation;
 public class ForgeButton extends Button {
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Inf.MODID, "textures/gui/forge_table.png");
-    private static final int TEXTURE_SIZE = 256;
-    private static final int STATE_OFFSET = 22;
+    private static final int TEXTURE_SIZE = 512;
+    private static final int STATE_OFFSET = 28;
 
     private final int u;
     private final int v;

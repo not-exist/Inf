@@ -1,6 +1,7 @@
 package com.inf.forge;
 
 import com.inf.InfConfig;
+import com.inf.advancement.ForgeAdvancements;
 import com.inf.block.ForgeBlockEntity;
 import com.inf.item.BladeBlankItem;
 import com.inf.item.HammerItem;
@@ -8,6 +9,7 @@ import com.inf.item.component.BladeData;
 import com.inf.registry.ModAttachments;
 import com.inf.registry.ModDataComponents;
 import com.inf.weapon.WeaponKind;
+import com.inf.weapon.WeaponTier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,47 +50,50 @@ public final class ForgeService {
                 frenzy,
                 InfConfig.forgeBalance());
 
-        if (outcome.broken()) {
-            blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, ItemStack.EMPTY);
-            blockEntity.setFrenzyStrikesLeft(0);
-            level.playSound(null, blockEntity.getBlockPos(), SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 0.9F, 0.9F);
-            level.sendParticles(
-                    ParticleTypes.CRIT,
-                    blockEntity.getBlockPos().getX() + 0.5,
-                    blockEntity.getBlockPos().getY() + 0.9,
-                    blockEntity.getBlockPos().getZ() + 0.5,
-                    12,
-                    0.2,
-                    0.2,
-                    0.2,
-                    0.05);
-        } else {
-            blade.set(
-                    ModDataComponents.BLADE_DATA.get(),
-                    new BladeData(data.kind(), outcome.value(), outcome.strikes(), data.seed()));
-            level.playSound(
-                    null,
-                    blockEntity.getBlockPos(),
-                    SoundEvents.ANVIL_USE,
-                    SoundSource.BLOCKS,
-                    0.8F,
-                    0.9F + player.getRandom().nextFloat() * 0.2F);
-            level.sendParticles(
-                    ParticleTypes.CRIT,
-                    blockEntity.getBlockPos().getX() + 0.5,
-                    blockEntity.getBlockPos().getY() + 0.9,
-                    blockEntity.getBlockPos().getZ() + 0.5,
-                    8,
-                    0.2,
-                    0.2,
-                    0.2,
-                    0.05);
+        switch (outcome.outcome()) {
+            case BREAK -> {
+                blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, ItemStack.EMPTY);
+                blockEntity.setFrenzyStrikesLeft(0);
+                level.playSound(
+                        null, blockEntity.getBlockPos(), SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 0.9F, 0.9F);
+                particles(level, blockEntity, ParticleTypes.CRIT, 14);
+                ForgeAdvancements.award(player, "break_blade");
+            }
+            case DAMAGE -> {
+                updateBlade(blade, data, outcome);
+                level.playSound(
+                        null, blockEntity.getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.7F, 0.55F);
+                particles(level, blockEntity, ParticleTypes.SMOKE, 10);
+                ForgeAdvancements.award(player, "damage_blade");
+            }
+            case SUCCESS -> {
+                updateBlade(blade, data, outcome);
+                level.playSound(
+                        null,
+                        blockEntity.getBlockPos(),
+                        SoundEvents.ANVIL_USE,
+                        SoundSource.BLOCKS,
+                        0.8F,
+                        0.9F + player.getRandom().nextFloat() * 0.2F);
+                particles(level, blockEntity, ParticleTypes.CRIT, 8);
+            }
+            case GREAT_SUCCESS -> {
+                updateBlade(blade, data, outcome);
+                level.playSound(
+                        null, blockEntity.getBlockPos(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.9F, 1.55F);
+                level.playSound(
+                        null, blockEntity.getBlockPos(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.35F, 1.6F);
+                particles(level, blockEntity, ParticleTypes.ENCHANT, 18);
+                ForgeAdvancements.award(player, "great_success");
+            }
         }
+        ForgeAdvancements.award(player, "first_strike");
 
         int nextDamage = hammer.getDamageValue() + 1;
         if (nextDamage >= hammer.getMaxDamage()) {
             blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_HAMMER, ItemStack.EMPTY);
             level.playSound(null, blockEntity.getBlockPos(), SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 0.8F, 0.9F);
+            ForgeAdvancements.award(player, "hammer_break");
         } else {
             hammer.setDamageValue(nextDamage);
         }
@@ -99,6 +104,25 @@ public final class ForgeService {
         blockEntity.markStrike(level.getGameTime());
         blockEntity.setChanged();
         return true;
+    }
+
+    private static void updateBlade(ItemStack blade, BladeData data, StrikeOutcome outcome) {
+        blade.set(
+                ModDataComponents.BLADE_DATA.get(),
+                new BladeData(data.kind(), outcome.value(), outcome.strikes(), data.seed()));
+    }
+
+    private static void particles(ServerLevel level, ForgeBlockEntity blockEntity, net.minecraft.core.particles.ParticleOptions type, int count) {
+        level.sendParticles(
+                type,
+                blockEntity.getBlockPos().getX() + 0.5,
+                blockEntity.getBlockPos().getY() + 0.9,
+                blockEntity.getBlockPos().getZ() + 0.5,
+                count,
+                0.25,
+                0.25,
+                0.25,
+                0.05);
     }
 
     public static boolean stop(ForgeBlockEntity blockEntity, ServerPlayer player) {
@@ -119,14 +143,28 @@ public final class ForgeService {
         blockEntity.setFrenzyStrikesLeft(0);
         level.playSound(null, blockEntity.getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.6F, 1.0F);
         blockEntity.setChanged();
-        onWeaponCompleted(player, data.kind());
+        onWeaponCompleted(player, data.kind(), data.value());
         return true;
     }
 
-    public static void onWeaponCompleted(ServerPlayer player, WeaponKind kind) {
+    public static void onWeaponCompleted(ServerPlayer player, WeaponKind kind, int value) {
         player.setData(
                 ModAttachments.FRENZY,
                 player.getData(ModAttachments.FRENZY).onWeaponCompleted(kind, InfConfig.frenzyRequired()));
+
+        ForgeAdvancements.award(player, "first_weapon");
+        ForgeAdvancements.award(player, "kind_" + kind.id);
+        WeaponTier tier = WeaponTier.forValue(value);
+        switch (tier) {
+            case COMMON -> ForgeAdvancements.award(player, "tier_common");
+            case FINE -> ForgeAdvancements.award(player, "tier_fine");
+            case RARE -> ForgeAdvancements.award(player, "tier_rare");
+            case EPIC -> ForgeAdvancements.award(player, "tier_epic");
+            case LEGENDARY -> ForgeAdvancements.award(player, "tier_legendary");
+            case CRUDE -> {
+            }
+        }
+        ForgeAdvancements.awardAllKindsIfDone(player);
     }
 
     public static boolean activateFrenzy(ForgeBlockEntity blockEntity, ServerPlayer player) {
@@ -143,6 +181,7 @@ public final class ForgeService {
         player.setData(ModAttachments.FRENZY, state.activated());
         level.playSound(null, blockEntity.getBlockPos(), SoundEvents.BLAZE_SHOOT, SoundSource.BLOCKS, 0.5F, 1.2F);
         blockEntity.setChanged();
+        ForgeAdvancements.award(player, "frenzy");
         return true;
     }
 }
