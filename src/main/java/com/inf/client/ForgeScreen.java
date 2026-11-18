@@ -76,12 +76,8 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fillGradient(0, 0, width, height, 0xFF1B1410, 0xFF060504);
-        graphics.fillGradient(0, 0, width, 48, 0x99000000, 0x00000000);
-        graphics.fillGradient(0, height - 56, width, height, 0x00000000, 0x99000000);
-        int glow = 0x22E8622C;
-        graphics.fillGradient(0, height / 3, width / 3, height * 2 / 3, 0x00000000, glow);
-        graphics.fillGradient(width * 2 / 3, height / 3, width, height * 2 / 3, glow, 0x00000000);
+        graphics.fill(0, 0, width, height, 0xFF100C0A);
+        renderBg(graphics, partialTick, mouseX, mouseY);
     }
 
     @Override
@@ -110,7 +106,6 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        graphics.fill(leftPos + 6, topPos + 8, leftPos + imageWidth + 6, topPos + imageHeight + 8, 0x66000000);
         graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight, 512, 512);
 
         int valueWidth = Math.min(88, (int) (displayedValue * 88 / 1000));
@@ -132,7 +127,7 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     private void drawChancePanel(GuiGraphics graphics) {
         int x = leftPos + 250;
         int y = topPos + 34;
-        graphics.fill(x, y, x + 160, y + 134, 0x8816110E);
+        graphics.fill(x, y, x + 160, y + 134, 0xFF100C0A);
         graphics.fill(x, y, x + 160, y + 1, 0xFF3A2C22);
         graphics.fill(x, y + 133, x + 160, y + 134, 0xFF050403);
         graphics.fill(x, y, x + 1, y + 134, 0xFF3A2C22);

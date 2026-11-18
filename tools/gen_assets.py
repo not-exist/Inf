@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Generate the custom GUI, block, item and advancement art for Inf."""
 import os
-import random
 from PIL import Image, ImageDraw
 
 ROOT = "src/main/resources/assets/inf/textures"
@@ -42,14 +41,8 @@ def save(img, path):
 def panel(d):
     for y in range(260):
         d.line([(0, y), (419, y)], fill=lerp(PANEL_TOP, PANEL_BOTTOM, y / 259.0))
-    rnd = random.Random(11)
-    for _ in range(4200):
-        x, y = rnd.randrange(4, 416), rnd.randrange(4, 256)
-        shade = rnd.choice([(255, 255, 255, 8), (0, 0, 0, 14)])
-        d.point((x, y), fill=shade)
     d.rectangle([0, 0, 419, 259], outline=OUTLINE, width=4)
     d.rectangle([4, 4, 415, 255], outline=LINE_MID, width=1)
-    d.rectangle([6, 6, 413, 253], outline=(5, 4, 3, 255), width=1)
     d.line([(12, 30), (407, 30)], fill=BRASS, width=1)
     d.line([(12, 31), (407, 31)], fill=LINE_MID, width=1)
     for x, y in ((10, 8), (404, 8), (10, 246), (404, 246)):
@@ -66,15 +59,7 @@ def panel(d):
     d.line([(12, 256), (407, 256)], fill=BRASS)
     for bx, by in ((18, 40), (142, 40), (18, 166), (142, 166), (152, 40), (240, 40), (152, 166), (240, 166)):
         d.rectangle([bx, by, bx + 2, by + 2], fill=BRASS)
-    # forge glow behind the anvil
-    glow = Image.new("RGBA", (420, 260), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    gd.ellipse([20, 58, 168, 190], fill=(232, 98, 44, 26))
-    gd.ellipse([48, 82, 142, 170], fill=(255, 161, 72, 30))
-    gd.ellipse([30, 64, 158, 186], outline=(232, 98, 44, 46), width=2)
-    gd.ellipse([20, 52, 168, 198], outline=(232, 98, 44, 22), width=1)
     img = Image.new("RGBA", (420, 260), (0, 0, 0, 0))
-    img.alpha_composite(glow)
     base = ImageDraw.Draw(img)
     # anvil silhouette
     base.polygon([(56, 118), (128, 118), (140, 128), (128, 136), (118, 136), (122, 150), (62, 150), (66, 136), (56, 128)], fill=(42, 46, 50, 255), outline=OUTLINE)
@@ -92,37 +77,12 @@ def panel(d):
     base.rectangle([86, 84, 110, 92], fill=(74, 80, 86, 255), outline=OUTLINE)
     base.rectangle([88, 86, 108, 90], fill=BRASS, outline=None)
     base.rectangle([88, 87, 108, 88], fill=BRASS_HI)
-    # forge arch and chains
-    base.arc([22, 42, 142, 182], 180, 360, fill=LINE_MID, width=2)
-    base.line([(22, 112), (22, 170)], fill=LINE_MID)
-    base.line([(142, 112), (142, 170)], fill=LINE_MID)
-    base.line([(40, 42), (40, 66)], fill=(58, 44, 34, 255))
-    base.line([(124, 42), (124, 66)], fill=(58, 44, 34, 255))
-    base.arc([34, 54, 130, 150], 200, 340, fill=(58, 44, 34, 140), width=1)
-    # crossed hammers emblem in the lower-left
-    base.line([(58, 182), (106, 204)], fill=(74, 58, 42, 255), width=4)
-    base.line([(106, 182), (58, 204)], fill=(74, 58, 42, 255), width=4)
-    base.rectangle([48, 178, 62, 185], fill=(94, 74, 50, 255), outline=OUTLINE)
-    base.rectangle([98, 178, 112, 185], fill=(94, 74, 50, 255), outline=OUTLINE)
-    base.line([(52, 180), (58, 184)], fill=BRASS)
-    base.line([(108, 180), (102, 184)], fill=BRASS)
-    # embers
-    rnd = random.Random(23)
-    for _ in range(38):
-        x, y = rnd.randrange(38, 152), rnd.randrange(64, 168)
-        size = rnd.choice([1, 1, 2])
-        color = rnd.choice([EMBER, EMBER_HI, (255, 220, 160, 255)])
-        base.rectangle([x, y, x + size - 1, y + size - 1], fill=color)
     # slot recesses
     for sx, sy in ((24, 48), (24, 78), (24, 108)):
         slot(base, sx, sy, (5, 4, 3, 255))
     # value bar frame
     bar(base, 150, 72, 90, 8)
     base.line([(150, 156), (238, 156)], fill=LINE_MID)
-    # right chance panel inset
-    base.rectangle([250, 34, 409, 167], fill=(16, 12, 10, 210), outline=(5, 4, 3, 255))
-    base.line([(251, 35), (408, 35)], fill=LINE_MID)
-    base.line([(251, 36), (408, 36)], fill=(5, 4, 3, 255))
     # player inventory frames
     for row in range(3):
         for col in range(9):
