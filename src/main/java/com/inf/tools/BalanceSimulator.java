@@ -33,7 +33,10 @@ public final class BalanceSimulator {
                 value = outcome.value();
             }
             totalStrikes += strikes;
-            int tier = WeaponTier.forValue(value).ordinal();
+            // Tier order is the loop contract: everything up to the reached tier counts.
+            @SuppressWarnings("EnumOrdinal")
+            int tierOrdinal = WeaponTier.forValue(value).ordinal();
+            int tier = tierOrdinal;
             for (int index = 0; index <= tier; index++) {
                 reached[index]++;
             }

@@ -46,6 +46,9 @@ public final class WeaponStatsTable {
 
     private WeaponStatsTable() {}
 
+    // The stat tables above are indexed by enum ordinal on purpose; WeaponStatsTableTest
+    // pins that every kind/tier pair is defined, so reordering a enum fails the build.
+    @SuppressWarnings("EnumOrdinal")
     public static WeaponStats forTier(WeaponKind kind, WeaponTier tier) {
         int kindIndex = kind.ordinal();
         int tierIndex = tier.ordinal();

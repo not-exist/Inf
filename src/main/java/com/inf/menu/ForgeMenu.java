@@ -167,6 +167,9 @@ public class ForgeMenu extends AbstractContainerMenu {
     }
 
     @Override
+    // Identity comparison is the point: a different instance at the same position is a
+    // different forge table, even if the block state compares equal.
+    @SuppressWarnings("ReferenceEquality")
     public boolean stillValid(Player player) {
         BlockPos pos = blockEntity.getBlockPos();
         boolean sameBlockEntity = player.level().getBlockEntity(pos) == blockEntity;

@@ -50,6 +50,9 @@ public class ForgeBlock extends BaseEntityBlock {
     }
 
     @Override
+    // Reference equality is intended here: Block instances are singletons and vanilla
+    // compares them by identity. ErrorProne cannot see through BlockState#getBlock.
+    @SuppressWarnings("ReferenceEquality")
     protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (state.getBlock() != newState.getBlock()
                 && level instanceof ServerLevel serverLevel
