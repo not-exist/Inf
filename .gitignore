@@ -38,3 +38,11 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Test-run byproducts ###
+/logs/
+
+### Client GUI test artifacts ###
+run/clienttest/
+run/screenshots/
+run/native/

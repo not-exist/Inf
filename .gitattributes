@@ -1,5 +1,27 @@
+# Normalize every text file to LF on checkout and in the repository, so that
+# Windows and macOS runs behave the same as Linux.
+* text=auto eol=lf
+
+# Windows batch files must keep CRLF or cmd.exe misparses them.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets must never be line-ending converted or diffed as text.
+*.png binary
+*.nbt binary
+*.jar binary
+*.zip binary
+*.ogg binary
+
+# The wrapper scripts are executed directly.
+gradlew text eol=lf
+
 # Disable autocrlf on generated files, they always generate with LF
 # Add any extra files or paths here to make git stop saying they
 # are changed when only line endings change.
 src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
+
+# Spotless owns Java formatting; keep the JSON resources in their authored style
+# so the format gate does not fight hand-written data files.
+src/main/resources/**/*.json text eol=lf
