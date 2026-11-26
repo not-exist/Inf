@@ -43,7 +43,9 @@ public class ForgeBlock extends BaseEntityBlock {
         }
         if (player instanceof ServerPlayer serverPlayer
                 && level.getBlockEntity(pos) instanceof ForgeBlockEntity blockEntity) {
-            serverPlayer.openMenu(blockEntity, buffer -> buffer.writeBlockPos(pos));
+            // The position is written by ForgeBlockEntity#writeClientSideData, which is the
+            // documented place for it; passing a writer here would append a second copy.
+            serverPlayer.openMenu(blockEntity);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;

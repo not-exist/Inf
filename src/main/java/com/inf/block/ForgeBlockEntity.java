@@ -6,6 +6,7 @@ import com.inf.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
@@ -16,9 +17,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class ForgeBlockEntity extends BlockEntity implements MenuProvider {
+/**
+ * The forge table's menu needs the block position on the client, so the block entity
+ * implements {@link IMenuProviderExtension}: without it the extra data written by
+ * {@code openMenu(provider, writer)} is dropped and the client-side menu constructor
+ * receives a null buffer.
+ */
+public class ForgeBlockEntity extends BlockEntity implements MenuProvider, IMenuProviderExtension {
     public static final int SLOT_BLADE = 0;
     public static final int SLOT_HAMMER = 1;
     public static final int SLOT_OUTPUT = 2;
@@ -85,6 +93,11 @@ public class ForgeBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new ForgeMenu(containerId, playerInventory, this, new ForgeData(this, player, InfConfig.forgeBalance()));
+    }
+
+    @Override
+    public void writeClientSideData(AbstractContainerMenu menu, RegistryFriendlyByteBuf buffer) {
+        buffer.writeBlockPos(getBlockPos());
     }
 
     @Override
