@@ -2,10 +2,10 @@ package com.inf.gametest;
 
 import com.inf.Inf;
 import com.inf.block.ForgeBlockEntity;
+import com.inf.block.ForgeData;
 import com.inf.forge.ForgeService;
 import com.inf.forge.FrenzyState;
 import com.inf.item.component.BladeData;
-import com.inf.menu.ForgeData;
 import com.inf.menu.ForgeMenu;
 import com.inf.registry.ModAttachments;
 import com.inf.registry.ModBlocks;
