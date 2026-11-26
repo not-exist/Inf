@@ -78,4 +78,10 @@ jobs:
   package:
     name: Package
     needs: [test, gui]
+    # _package.yml attests build provenance, and a called workflow can never hold
+    # more permission than its caller: without these the whole run fails at startup.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/_package.yml
