@@ -44,6 +44,9 @@ sourceSets {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    // A mirror in front of Central: the hosted runners hit 429 from Maven Central
+    // often enough that a single-source build fails intermittently.
+    maven { url = uri('https://maven-central.storage-download.googleapis.com/maven2/') }
     mavenCentral()
 }
 

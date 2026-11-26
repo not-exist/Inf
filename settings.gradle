@@ -1,5 +1,10 @@
 pluginManagement {
     repositories {
+        // Google's Maven Central mirror first: hosted runners get HTTP 429 from
+        // repo.maven.apache.org often enough that single-source resolution fails
+        // intermittently. The plugin portal is still the fallback for plugins that
+        // only live there.
+        maven { url = uri('https://maven-central.storage-download.googleapis.com/maven2/') }
         gradlePluginPortal()
     }
 }
