@@ -46,3 +46,10 @@ jobs:
     name: Format
     needs: validate
     uses: ./.github/workflows/_format.yml
+
+  jdk:
+    name: JDK matrix
+    needs: [validate, format]
+    uses: ./.github/workflows/_jdkmatrix.yml
+    with:
+      distributions: ${{ inputs.scope == 'quick' && '["temurin","corretto"]' || '["temurin","oracle-openjdk","corretto","zulu","oracle"]' }}

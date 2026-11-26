@@ -265,6 +265,36 @@ tasks.named('check') {
     dependsOn tasks.named('jacocoTestCoverageVerification')
 }
 
+// The JDK vendor matrix is only meaningful if Gradle actually compiles with the
+// JDK that the workflow installed. The foojay resolver would otherwise download a
+// Temurin JDK whenever the requested toolchain is missing, and every vendor job
+// would silently test Temurin. CI pins the installations path and this task then
+// asserts that the resolved 21 toolchain has the expected vendor.
+tasks.register('verifyToolchain') {
+    description = 'Assert that the resolved Java 21 toolchain comes from -PexpectedJdkVendor.'
+    group = 'verification'
+    def expected = providers.gradleProperty('expectedJdkVendor')
+    def launcher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    doLast {
+        if (!expected.isPresent()) {
+            throw new GradleException('Pass -PexpectedJdkVendor=<substring of vendor name>')
+        }
+        def resolved = launcher.get()
+        def metadata = resolved.metadata
+        def vendor = metadata.vendor
+        def want = expected.get()
+        logger.lifecycle("toolchain: vendor='${vendor}' version=${metadata.languageVersion} home=${metadata.installationPath}")
+        if (!vendor.toLowerCase().contains(want.toLowerCase())) {
+            throw new GradleException(
+                    "Expected a JDK whose vendor contains '${want}', but Gradle resolved '${vendor}'. " +
+                    "Check that the workflow installed that distribution and pinned " +
+                    "org.gradle.java.installations.paths.")
+        }
+    }
+}
+
 tasks.register('balanceSim', JavaExec) {
     dependsOn tasks.named('classes')
     classpath = sourceSets.main.runtimeClasspath

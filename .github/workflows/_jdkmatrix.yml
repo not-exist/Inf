@@ -1,0 +1,84 @@
+name: JDK matrix
+
+on:
+  workflow_call:
+    inputs:
+      distributions:
+        description: JSON array of actions/setup-java distribution keywords.
+        required: false
+        type: string
+        default: '["temurin","oracle-openjdk","corretto","zulu","oracle"]'
+      fail-fast:
+        description: Stop the matrix on the first vendor failure.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: ${{ matrix.distribution }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: ${{ inputs.fail-fast }}
+      matrix:
+        distribution: ${{ fromJSON(inputs.distributions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          distribution: ${{ matrix.distribution }}
+          neoform-cache-key: neoform-jdk-${{ matrix.distribution }}-${{ hashFiles('gradle.properties') }}
+
+      # oracle-openjdk and oracle are the two names for Oracle's builds; the
+      # vendor string differs too, so the expected value comes from a small map.
+      - name: Resolve expected vendor name
+        id: vendor
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.distribution }}" in
+            temurin)         echo "name=Eclipse Temurin" >> "$GITHUB_OUTPUT" ;;
+            oracle-openjdk)  echo "name=Oracle Corporation (OpenJDK)" >> "$GITHUB_OUTPUT" ;;
+            oracle)          echo "name=Oracle Corporation" >> "$GITHUB_OUTPUT" ;;
+            corretto)        echo "name=Amazon" >> "$GITHUB_OUTPUT" ;;
+            zulu)            echo "name=Azul Systems" >> "$GITHUB_OUTPUT" ;;
+            microsoft)       echo "name=Microsoft" >> "$GITHUB_OUTPUT" ;;
+            liberica)        echo "name=BellSoft" >> "$GITHUB_OUTPUT" ;;
+            semeru)          echo "name=IBM Corporation" >> "$GITHUB_OUTPUT" ;;
+            sapmachine)      echo "name=SAP SE" >> "$GITHUB_OUTPUT" ;;
+            dragonwell)      echo "name=Alibaba" >> "$GITHUB_OUTPUT" ;;
+            kona)            echo "name=Tencent" >> "$GITHUB_OUTPUT" ;;
+            redhat)          echo "name=Red Hat" >> "$GITHUB_OUTPUT" ;;
+            graalvm-community) echo "name=GraalVM Community" >> "$GITHUB_OUTPUT" ;;
+            jetbrains)       echo "name=JetBrains" >> "$GITHUB_OUTPUT" ;;
+            *)               echo "name=" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "expected vendor: $(grep '^name=' <<<"$(cat "$GITHUB_OUTPUT")" | tail -1 | cut -d= -f2-)"
+
+      - name: Compile every source set
+        run: >
+          ./gradlew --no-daemon --stacktrace --console=plain
+          compileJava compileTestJava compileGametestJava
+
+      # Proves the compile above used the vendor this job installed. Without it
+      # a foojay-resolved Temurin JDK would satisfy every job in the matrix.
+      - name: Assert the Gradle toolchain vendor
+        run: >
+          ./gradlew --no-daemon --stacktrace --console=plain verifyToolchain
+          -PexpectedJdkVendor="${{ steps.vendor.outputs.name }}"
+
+      - name: Upload Gradle problems report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: jdk-${{ matrix.distribution }}-problems
+          path: build/reports/problems
+          if-no-files-found: ignore
+          retention-days: 7
