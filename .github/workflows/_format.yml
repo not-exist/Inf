@@ -1,0 +1,37 @@
+name: Format
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  spotless:
+    name: Spotless
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      - name: spotlessCheck
+        run: ./gradlew --no-daemon --stacktrace --console=plain spotlessCheck
+
+      - name: How to fix
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo "## Format gate failed"
+            echo
+            echo "Run \`./gradlew spotlessApply\` locally and commit the result."
+            echo
+            echo "The gate covers \`src/*/java/**/*.java\` with palantir-java-format,"
+            echo "plus trailing whitespace and final newlines in Gradle files, JSON and docs."
+          } >> "$GITHUB_STEP_SUMMARY"

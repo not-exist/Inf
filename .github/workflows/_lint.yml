@@ -1,0 +1,75 @@
+name: Lint
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  workflows:
+    name: Workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -o actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          tar -xzf actionlint.tar.gz actionlint
+          ./actionlint --version
+
+      - name: actionlint
+        run: ./actionlint -color
+
+      - name: zizmor (workflow injection and permissions)
+        uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1  # v0.9.2
+        with:
+          inputs: .github
+          persona: pedantic
+
+  repository:
+    name: Repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Line endings are LF in the repository
+        run: python3 -I tools/check_line_endings.py
+
+      - name: No paths differ only by case
+        run: python3 -I tools/check_case_collisions.py
+
+      - name: Workflow files parse
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          import sys
+
+          try:
+              import yaml
+          except ImportError:
+              print("PyYAML missing; skipping YAML parse check")
+              sys.exit(0)
+
+          failed = False
+          for path in sorted(pathlib.Path(".github").rglob("*.yml")):
+              try:
+                  yaml.safe_load(path.read_text(encoding="utf-8"))
+              except Exception as exc:  # noqa: BLE001 - report and continue
+                  print(f"{path}: {exc}")
+                  failed = True
+          sys.exit(1 if failed else 0)
+          PY
