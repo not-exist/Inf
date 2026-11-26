@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: quick limits the matrix to Linux and windows-2025.
+        required: false
+        type: string
+        default: full
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  compile:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # windows-2022 and windows-2025 are Server builds: they approximate the
+        # Windows 10 and Windows 11 kernel families, and are the closest hosted
+        # images to those desktops. macOS 15 is arm64; the Intel variant runs
+        # on a schedule instead of every PR.
+        os: ${{ fromJSON(inputs.scope == 'quick'
+          && '["ubuntu-24.04","windows-2025"]'
+          || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      - name: Compile every source set with -Xlint and -Werror
+        run: >
+          ./gradlew --no-daemon --stacktrace --console=plain
+          compileJava compileTestJava compileGametestJava
+          -PwarningsAsErrors
+
+      # ErrorProne needs a forked compiler and writes its findings through javac,
+      # so it is a separate invocation: a failure here means a real bug pattern,
+      # not a formatting nit.
+      - name: ErrorProne
+        run: ./gradlew --no-daemon --stacktrace --console=plain compileJava --rerun-tasks
+
+      - name: Upload problems report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: build-problems-${{ matrix.os }}
+          path: build/reports/problems
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # SpotBugs is deliberately absent: spotbugs-gradle-plugin 3.0.0 is the only
+  # published version and it fails on Gradle 9 with
+  # "org/gradle/api/reporting/internal/TaskReportContainer". Revisit when the
+  # plugin ships a Gradle 9 compatible release.

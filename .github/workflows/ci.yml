@@ -53,3 +53,10 @@ jobs:
     uses: ./.github/workflows/_jdkmatrix.yml
     with:
       distributions: ${{ inputs.scope == 'quick' && '["temurin","corretto"]' || '["temurin","oracle-openjdk","corretto","zulu","oracle"]' }}
+
+  build:
+    name: Build
+    needs: [validate, format, lint]
+    uses: ./.github/workflows/_build.yml
+    with:
+      scope: ${{ inputs.scope || 'full' }}

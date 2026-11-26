@@ -3,6 +3,7 @@ plugins {
     id 'maven-publish'
     id 'jacoco'
     id 'com.diffplug.spotless' version '8.12.0'
+    id 'net.ltgt.errorprone' version '5.2.0'
     id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
@@ -149,6 +150,15 @@ neoForge {
 // "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+
+    // ErrorProne ships as javac plugin jars. The plugin's own 'errorprone'
+    // configuration is declarative, so a resolvable child is needed to put the
+    // jars on the processor path without fighting ModDevGradle's classpath.
+    errorproneJars {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom errorprone
+    }
 }
 
 dependencies {
@@ -219,6 +229,54 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+
+    // Lint only our own sources. Minecraft and the generated patches contain
+    // warnings we cannot fix and must not fail on.
+    def ownSources = source.filter {
+        def path = it.path.replace('\\', '/')
+        path.contains('/src/main/java/') || path.contains('/src/test/java/') || path.contains('/src/gametest/java/')
+    }
+    if (!ownSources.isEmpty()) {
+        options.compilerArgs << '-Xlint:all,-processing,-serial,-this-escape'
+        // -Werror only on main: the test and GameTest source sets still call APIs that
+        // 1.21.1 deprecates for removal (GameTestHelper#makeMockServerPlayerInLevel) and
+        // have no replacement yet, so treating those as errors would block upgrades.
+        if (project.hasProperty('warningsAsErrors') && name == 'compileJava') {
+            options.compilerArgs << '-Werror'
+        }
+    }
+}
+
+// ErrorProne runs as a javac plugin and needs its own forked compiler; the
+// analysis is skipped for non-main source sets because the modding classpath
+// makes those compilations several times slower for no extra signal.
+dependencies {
+    errorprone 'com.google.errorprone:error_prone_core:2.53.0'
+}
+
+tasks.named('compileJava', JavaCompile).configure {
+    // ErrorProne instruments the javac AST, so it must run in a forked compiler.
+    options.fork = true
+    // ModDevGradle owns the annotation processor path for the modding classpath, so
+    // the plugin's default path never reaches javac. Append the ErrorProne jars.
+    options.annotationProcessorPath = files(
+            configurations.errorproneJars,
+            options.annotationProcessorPath)
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
+        // Silence checks that fight NeoForge's API shape; every entry needs a reason.
+        disable('InlineMeSuggester')
+        disable('NonCanonicalType')
+    }
+}
+
+// ErrorProne is scoped to main sources on purpose: the GameTest and test source sets
+// pull the whole modding classpath in and an analysis there costs minutes for no
+// additional signal. The plugin still needs the opt-out made explicit.
+['compileTestJava', 'compileGametestJava'].each { taskName ->
+    tasks.matching { it.name == taskName }.configureEach {
+        options.errorprone.enabled = false
+    }
 }
 
 tasks.named('test') {
