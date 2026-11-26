@@ -1,0 +1,97 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: quick limits the matrix to Linux and windows-2025.
+        required: false
+        type: string
+        default: full
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.scope == 'quick'
+          && '["ubuntu-24.04","windows-2025"]'
+          || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      # Unit tests are pure JVM, but running them on every OS is what catches
+      # path separators, case-insensitive filesystems and default charsets.
+      - name: Unit tests and coverage gate
+        run: ./gradlew --no-daemon --stacktrace --console=plain check
+
+      - name: GameTests
+        run: |
+          ./gradlew --no-daemon --stacktrace --console=plain prepareRunDir
+          ./gradlew --no-daemon --stacktrace --console=plain runGameTestServer
+
+      # Starting a dedicated server proves the mod loads with real registries and
+      # data packs on the dedicated-server path. serverSmokeTest stops the server via
+      # the run config's stop task once "Done (" appears, so no shell timeout is needed.
+      - name: Dedicated server smoke test
+        run: ./gradlew --no-daemon --stacktrace --console=plain prepareRunDir serverSmokeTest
+
+      - name: Test summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, os, xml.etree.ElementTree as ET
+          tests = failures = errors = skipped = 0
+          rows = []
+          for path in sorted(glob.glob("build/test-results/test/*.xml")):
+              root = ET.parse(path).getroot()
+              t, f = int(root.get("tests", 0)), int(root.get("failures", 0))
+              e, s = int(root.get("errors", 0)), int(root.get("skipped", 0))
+              tests, failures, errors, skipped = tests + t, failures + f, errors + e, skipped + s
+              if f or e:
+                  rows.append(f"| {root.get('name', '?')} | {t} | {f} | {e} |")
+          print(f"## Tests on {os.environ.get('RUNNER_OS')}")
+          print()
+          print(f"{tests} tests, {failures} failures, {errors} errors, {skipped} skipped")
+          if rows:
+              print()
+              print("| Class | Tests | Failures | Errors |")
+              print("|---|---:|---:|---:|")
+              print("\n".join(rows))
+          PY
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: |
+            build/test-results/test
+            build/reports/tests/test
+            run/logs
+            run/crash-reports
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # Coverage is uploaded once: five identical uploads would only add noise.
+      - name: Upload coverage
+        if: always() && matrix.os == 'ubuntu-24.04'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: coverage-ubuntu-24.04
+          path: build/reports/jacoco/test
+          if-no-files-found: ignore
+          retention-days: 7

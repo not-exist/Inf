@@ -60,3 +60,15 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       scope: ${{ inputs.scope || 'full' }}
+
+  test:
+    name: Test
+    needs: jdk
+    uses: ./.github/workflows/_test.yml
+    with:
+      scope: ${{ inputs.scope || 'full' }}
+
+  package:
+    name: Package
+    needs: [test, build]
+    uses: ./.github/workflows/_package.yml

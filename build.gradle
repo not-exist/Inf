@@ -353,6 +353,185 @@ tasks.register('verifyToolchain') {
     }
 }
 
+// ---------------------------------------------------------------------------
+// CI helpers. All of them are Gradle tasks rather than shell snippets so that
+// the same command works on Windows, macOS and Linux runners.
+// ---------------------------------------------------------------------------
+
+// The dev run directory is gitignored and absent on a fresh runner. GameTestServer
+// and the server run both refuse to start without an accepted EULA.
+tasks.register('prepareRunDir') {
+    description = 'Create run/ and accept the Minecraft EULA for CI runs.'
+    group = 'verification'
+    def runDir = layout.projectDirectory.dir('run')
+    outputs.upToDateWhen { false }
+    doLast {
+        def dir = runDir.asFile
+        dir.mkdirs()
+        new File(dir, 'eula.txt').text = 'eula=true\n'
+        new File(dir, 'server.properties').text = [
+                'online-mode=false',
+                'level-type=minecraft\\:flat',
+                'spawn-protection=0',
+                'max-players=2',
+                'view-distance=4',
+                'simulation-distance=4'
+        ].join('\n') + '\n'
+    }
+}
+
+// A server run is only useful as a smoke test if it actually reached "Done" and
+// logged no errors; grep and sed are not portable, so the assertions live here.
+// Runs the dedicated server, waits for its ready line, then stops it. Doing this in
+// Gradle instead of a shell script keeps one implementation for all three operating
+// systems and fails on the server's own log rather than on a shell timeout utility
+// that does not exist everywhere.
+tasks.register('serverSmokeTest') {
+    description = 'Start the dedicated server, wait for "Done (", then stop it.'
+    group = 'verification'
+    dependsOn tasks.named('prepareRunDir')
+    // Everything the action needs is captured at configuration time: the configuration
+    // cache forbids touching project state during execution.
+    def runDir = layout.projectDirectory.dir('run').asFile
+    def projectDir = layout.projectDirectory.asFile
+    def timeoutSeconds = (findProperty('serverSmokeTimeoutSeconds') ?: '300') as int
+    def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+    def gradlew = new File(projectDir, isWindows ? 'gradlew.bat' : 'gradlew')
+    doLast {
+        def logFile = new File(runDir, 'logs/latest.log')
+        logFile.delete()
+        def consoleLog = new File(runDir, 'server-smoke.log')
+        def process = new ProcessBuilder(
+                gradlew.absolutePath, '--no-daemon', '--console=plain', 'runServer')
+                .directory(projectDir)
+                .redirectErrorStream(true)
+                .redirectOutput(ProcessBuilder.Redirect.appendTo(consoleLog))
+                .start()
+        def deadline = System.currentTimeMillis() + timeoutSeconds * 1000L
+        boolean ready = false
+        try {
+            while (System.currentTimeMillis() < deadline) {
+                if (logFile.exists() && logFile.text.contains('Done (')) {
+                    ready = true
+                    break
+                }
+                if (!process.isAlive()) break
+                Thread.sleep(1000)
+            }
+        } finally {
+            process.destroy()
+            process.waitFor()
+        }
+        if (!ready) {
+            throw new GradleException(
+                    "Server did not reach the ready state within ${timeoutSeconds}s; see run/server-smoke.log")
+        }
+        logger.lifecycle('serverSmokeTest: server reached the ready state')
+    }
+}
+
+tasks.register('verifyServerLog') {
+    description = 'Fail when run/logs/latest.log shows a failed server start.'
+    group = 'verification'
+    def logFile = layout.projectDirectory.file('run/logs/latest.log')
+    doLast {
+        def file = logFile.asFile
+        if (!file.exists()) {
+            throw new GradleException("No server log at ${file}; did runServer start?")
+        }
+        def text = file.text
+        if (!text.contains('Done (')) {
+            throw new GradleException('Server never reached the "Done (" ready line.')
+        }
+        def noisy = text.readLines().findAll {
+            it.contains('ERROR') || it.contains('Exception in thread') || it.contains('crash-reports')
+        }
+        if (!noisy.isEmpty()) {
+            throw new GradleException("Server log contains failures:\n" + noisy.take(20).join('\n'))
+        }
+    }
+}
+
+// Reproducible archives: identical bytes for identical inputs, on every OS. The
+// multi-OS matrix compares the SHA-256 of all four jars, so anything that leaks a
+// timestamp, a locale or a filesystem ordering into the archive fails the build.
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+// Jar content assertions used to be a bash block with jar/grep/stat. A ZipFile
+// walk is portable and gives precise failure messages.
+tasks.register('verifyJar') {
+    description = 'Assert the built jar contains the shipped resources and nothing dev-only.'
+    group = 'verification'
+    dependsOn tasks.named('jar')
+    def jarFile = tasks.named('jar').flatMap { it.archiveFile }
+    def expectedVersion = providers.provider { project.version.toString() }
+    def outputDir = layout.buildDirectory.dir('reports/jar-verification')
+    outputs.dir(outputDir)
+    doLast {
+        def file = jarFile.get().asFile
+        if (!file.exists()) {
+            throw new GradleException("Jar missing: ${file}")
+        }
+        def entries = new java.util.zip.ZipFile(file).withCloseable { zip ->
+            zip.entries().collect { it.name }
+        }
+        def problems = []
+        if (!entries.contains('META-INF/neoforge.mods.toml')) {
+            problems << 'META-INF/neoforge.mods.toml is missing'
+        }
+        def advancements = entries.findAll { it ==~ /data\/inf\/advancement\/.*\.json/ }
+        if (advancements.size() != 19) {
+            problems << "expected 19 advancements, found ${advancements.size()}"
+        }
+        ['assets/inf/lang/en_us.json', 'assets/inf/lang/zh_cn.json'].each {
+            if (!entries.contains(it)) problems << "${it} is missing"
+        }
+        def devOnly = entries.findAll {
+            it.startsWith('com/inf/gametest/') || it.startsWith('com/inf/clienttest/')
+        }
+        if (!devOnly.isEmpty()) {
+            problems << "dev-only classes leaked into the jar: ${devOnly.take(5)}"
+        }
+        if (entries.any { it.endsWith('.bbmodel') }) {
+            problems << 'BlockBench sources leaked into the jar'
+        }
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        def sha = digest.digest(file.bytes).collect { String.format('%02x', it) }.join()
+        def reportDir = outputDir.get().asFile
+        reportDir.mkdirs()
+        new File(reportDir, 'jar.txt').text = [
+                "jar=${file.name}",
+                "bytes=${file.length()}",
+                "sha256=${sha}",
+                "version=${expectedVersion.get()}"
+        ].join('\n') + '\n'
+        if (!problems.isEmpty()) {
+            throw new GradleException("Jar verification failed:\n- " + problems.join('\n- '))
+        }
+        logger.lifecycle("verifyJar: ${file.name} (${file.length()} bytes) sha256=${sha}")
+    }
+}
+
+tasks.register('checksums') {
+    description = 'Write build/libs/SHA256SUMS.txt for the built jar.'
+    group = 'verification'
+    dependsOn tasks.named('jar')
+    def jarFile = tasks.named('jar').flatMap { it.archiveFile }
+    def outFile = layout.buildDirectory.file('libs/SHA256SUMS.txt')
+    outputs.file(outFile)
+    doLast {
+        def file = jarFile.get().asFile
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        def sha = digest.digest(file.bytes).collect { String.format('%02x', it) }.join()
+        def target = outFile.get().asFile
+        target.parentFile.mkdirs()
+        target.text = "${sha}  ${file.name}\n"
+    }
+}
+
 tasks.register('balanceSim', JavaExec) {
     dependsOn tasks.named('classes')
     classpath = sourceSets.main.runtimeClasspath

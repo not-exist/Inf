@@ -190,7 +190,13 @@ public final class ForgeGameTests {
                 0, player.getInventory(), forge, new ForgeData(forge, player, com.inf.forge.ForgeBalance.DEFAULT));
 
         helper.assertTrue(menu.clickMenuButton(player, ForgeMenu.ACTION_STRIKE), "strike action");
-        helper.assertTrue(bladeData(forge) != null && bladeData(forge).strikes() == 1, "menu strike lands");
+        // clickMenuButton drives the real randomised path, so a BREAK is legal here: the
+        // blade is consumed and replaced by nothing. Assert the strike resolved instead of
+        // pinning one outcome, otherwise the test flakes at the base break chance.
+        BladeData afterStrike = bladeData(forge);
+        helper.assertTrue(
+                afterStrike == null || afterStrike.strikes() == 1,
+                "a strike either records one strike or shatters the blade");
         helper.assertFalse(menu.clickMenuButton(player, 99), "unknown action is rejected");
         helper.succeed();
     }
