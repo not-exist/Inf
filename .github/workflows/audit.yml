@@ -1,7 +1,9 @@
 name: Audit
 
 on:
-  pull_request:
+  # Scheduled only for now: dependency review needs the repository dependency
+  # graph (and GitHub Advanced Security on private repositories). Add
+  # `pull_request:` once the graph is available for this repository.
   schedule:
     - cron: "0 3 * * 1"
   workflow_dispatch:
@@ -11,7 +13,8 @@ permissions:
 
 jobs:
   dependency-review:
-    if: github.event_name == 'pull_request'
+    # Advisory while the dependency graph is unavailable.
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -291,7 +291,7 @@ pure packages only:
   `com.inf.item.component.BladeData`;
 - excluded: `ForgeService`, `WeaponFactory`, `WeaponAttributeApplier`,
   `WeaponToolFactory` (Minecraft-bound);
-- start by publishing the report, then ratchet to 80% line / 70% branch in Phase 2.
+- shipped with a 50% line rule on the classes above; ratchet toward 80% as tests grow.
 
 ## 5. CI design
 
@@ -587,7 +587,7 @@ from the commit.
   compileJava` (ModDevGradle needs its modding classpath, so autobuild is
   unreliable), plus the `actions` language for workflow-injection checks. Reuses
   the same JDK/cache setup. Weekly rescan of unchanged code.
-- `audit.yml`: `actions/dependency-review-action` on PRs (fail on high). OSV
+- `audit.yml`: `actions/dependency-review-action`, scheduled/advisory for now; enable the PR trigger once the repository dependency graph is available. OSV
   scanning needs a `gradle.lockfile`; enabling Gradle dependency locking is a
   separate decision (noisy with ModDevGradle) and is optional.
 - `release.yml`: tag `v*` → reusable `package.yml` → tag/`mod_version` guard →
@@ -631,7 +631,7 @@ Acceptance criteria for the workflow itself (verify on the first PRs):
 | Wrapper validation | validate | yes |
 | Compile (main + test) | quality | yes |
 | 104 JUnit tests | unit-test | yes |
-| JaCoCo 80% line / 70% branch on pure packages (Phase 2) | unit-test | yes (ratchet) |
+| JaCoCo 50% line initially on selected pure classes, ratcheting to 80% | unit-test | yes |
 | 17 GameTests | gametest | yes |
 | Jar content checks | package | yes for releases; optional for PRs |
 | CodeQL / dependency review | scheduled / PR | advisory first, then required |

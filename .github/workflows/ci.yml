@@ -38,7 +38,7 @@ jobs:
         with:
           neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
       - name: Compile main and test sources
-        run: ./gradlew --no-daemon --stacktrace --console=plain compileJava compileTestJava
+        run: ./gradlew --no-daemon --stacktrace --console=plain compileJava compileTestJava compileGametestJava
       # Phase 2: formatting gate, landed together with a one-time spotlessApply commit.
       # - name: Formatting
       #   run: ./gradlew --no-daemon --stacktrace --console=plain spotlessCheck
