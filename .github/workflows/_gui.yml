@@ -72,11 +72,18 @@ jobs:
         shell: pwsh
         run: |
           $client = Start-Process -FilePath ".\gradlew.bat" -ArgumentList "--no-daemon","--console=plain","runClientTest" -PassThru -RedirectStandardOutput client.log -RedirectStandardError client.err
+          $code = 1
           try {
             python tools/gui_driver/driver.py --os windows
             $code = $LASTEXITCODE
           } finally {
             Stop-Process -Id $client.Id -Force -ErrorAction SilentlyContinue
+            if ($code -ne 0) {
+              Write-Host '=== driver exit' $code '==='
+              if (Test-Path run/clienttest) { Get-ChildItem run/clienttest | Format-Table Name, Length }
+              if (Test-Path client.log) { Get-Content client.log -Tail 60 }
+              if (Test-Path client.err) { Get-Content client.err -Tail 40 }
+            }
           }
           exit $code
 

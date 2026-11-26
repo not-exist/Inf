@@ -63,12 +63,15 @@ func click(at point: CGPoint, right: Bool) {
 }
 
 // Put the window at a known origin so window coordinates match the harness layout.
-if let window = NSWorkspace.shared.runningApplications
-    .first(where: { $0.localizedName?.contains("Minecraft") == true })?
-    .windows.first {
-    var frame = window.frame
-    frame.origin = .zero
-    window.setFrame(frame, display: true)
+// NSRunningApplication has no `windows` member; the window list comes from Quartz.
+if let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+    as? [[String: Any]],
+   let minecraft = list.first(where: {
+       ($0[kCGWindowOwnerName as String] as? String)?.contains("Minecraft") == true
+   }),
+   let bounds = minecraft[kCGWindowBounds as String] as? [String: Any],
+   let windowId = minecraft[kCGWindowNumber as String] as? UInt32 {
+    print("window id \(windowId) at \(bounds)")
 }
 
 guard waitState("ready", 180) else { fail("harness never reached ready", 1) }

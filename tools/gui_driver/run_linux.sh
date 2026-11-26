@@ -5,7 +5,6 @@
 # share a display. Used by .github/workflows/_gui.yml and by hand during development.
 set -euo pipefail
 
-DISPLAY_NUM="${DISPLAY_NUM:-99}"
 SCREEN="${SCREEN:-1280x800x24}"
 CLIENT_LOG="${CLIENT_LOG:-client.log}"
 
@@ -18,12 +17,20 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Do not assume :99 is free: a runner image may already run a server there, and a
+# stale /tmp/.X99-lock makes Xvfb exit at once, which reads as "did not come up".
+DISPLAY_NUM="$(python3 tools/gui_driver/free_display.py)"
 Xvfb ":$DISPLAY_NUM" -screen 0 "$SCREEN" > xvfb.log 2>&1 &
 XVFB_PID=$!
 export DISPLAY=":$DISPLAY_NUM"
-sleep 3
+
+for _ in $(seq 1 20); do
+    if xdpyinfo > /dev/null 2>&1; then break; fi
+    sleep 0.5
+done
 if ! xdpyinfo > /dev/null 2>&1; then
     echo "Xvfb did not come up on $DISPLAY"
+    cat xvfb.log || true
     exit 2
 fi
 
@@ -41,5 +48,5 @@ env DISPLAY="$DISPLAY" ./gradlew --no-daemon --console=plain prepareRunDir prepa
 env DISPLAY="$DISPLAY" ./gradlew --no-daemon --console=plain runClientTest > "$CLIENT_LOG" 2>&1 &
 CLIENT_PID=$!
 
-# The driver polls the harness state; give the client time to reach the title screen.
+# The driver polls the harness state and fails on its own timeout.
 python3 tools/gui_driver/driver.py --os linux

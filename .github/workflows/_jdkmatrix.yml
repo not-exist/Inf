@@ -45,10 +45,12 @@ jobs:
           set -euo pipefail
           case "${{ matrix.distribution }}" in
             temurin)         echo "name=Eclipse Temurin" >> "$GITHUB_OUTPUT" ;;
-            oracle-openjdk)  echo "name=Oracle Corporation (OpenJDK)" >> "$GITHUB_OUTPUT" ;;
-            oracle)          echo "name=Oracle Corporation" >> "$GITHUB_OUTPUT" ;;
+            # Oracle ships both as "Oracle"; the toolchain metadata does not distinguish
+            # the Oracle JDK from Oracle OpenJDK builds.
+            oracle-openjdk)  echo "name=Oracle" >> "$GITHUB_OUTPUT" ;;
+            oracle)          echo "name=Oracle" >> "$GITHUB_OUTPUT" ;;
             corretto)        echo "name=Amazon" >> "$GITHUB_OUTPUT" ;;
-            zulu)            echo "name=Azul Systems" >> "$GITHUB_OUTPUT" ;;
+            zulu)            echo "name=Azul Zulu" >> "$GITHUB_OUTPUT" ;;
             microsoft)       echo "name=Microsoft" >> "$GITHUB_OUTPUT" ;;
             liberica)        echo "name=BellSoft" >> "$GITHUB_OUTPUT" ;;
             semeru)          echo "name=IBM Corporation" >> "$GITHUB_OUTPUT" ;;
