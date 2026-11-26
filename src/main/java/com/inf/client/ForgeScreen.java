@@ -171,7 +171,8 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
             graphics.drawString(font, name, 150, 44, COLOR_TEXT, false);
         }
 
-        graphics.drawString(font, Component.translatable("gui.inf.forge.value", menu.value()), 150, 60, COLOR_TEXT, false);
+        graphics.drawString(
+                font, Component.translatable("gui.inf.forge.value", menu.value()), 150, 60, COLOR_TEXT, false);
         graphics.drawString(font, Component.translatable("gui.inf.forge.tier"), 150, 140, COLOR_DIM, false);
 
         if (!ready) {
@@ -179,7 +180,8 @@ public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
             return;
         }
 
-        graphics.drawString(font, Component.translatable("gui.inf.forge.strikes", menu.strikes()), 150, 92, COLOR_DIM, false);
+        graphics.drawString(
+                font, Component.translatable("gui.inf.forge.strikes", menu.strikes()), 150, 92, COLOR_DIM, false);
         graphics.drawString(
                 font,
                 Component.translatable("gui.inf.forge.gain", menu.gainMin(), menu.gainMax()),

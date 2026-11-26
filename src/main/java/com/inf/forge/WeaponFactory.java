@@ -11,8 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 
 public final class WeaponFactory {
-    private WeaponFactory() {
-    }
+    private WeaponFactory() {}
 
     public static ItemStack create(WeaponKind kind, int value, int strikes, long seed) {
         WeaponTier tier = WeaponTier.forValue(value);

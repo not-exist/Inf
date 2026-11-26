@@ -188,7 +188,8 @@ public class ForgeMenu extends AbstractContainerMenu {
         } else {
             ForgeMenuTransfer.Range destination = ForgeMenuTransfer.destinationFor(
                     stack.getItem() instanceof BladeBlankItem, stack.getItem() instanceof HammerItem);
-            boolean moved = destination != null && moveItemStackTo(stack, destination.start(), destination.end(), false);
+            boolean moved =
+                    destination != null && moveItemStackTo(stack, destination.start(), destination.end(), false);
             if (!moved) {
                 ForgeMenuTransfer.Range range = index < 30
                         ? ForgeMenuTransfer.hotbar(slots.size())

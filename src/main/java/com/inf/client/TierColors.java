@@ -3,8 +3,7 @@ package com.inf.client;
 import com.inf.weapon.WeaponTier;
 
 public final class TierColors {
-    private TierColors() {
-    }
+    private TierColors() {}
 
     public static int of(WeaponTier tier) {
         return switch (tier) {

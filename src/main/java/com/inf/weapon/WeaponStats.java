@@ -6,5 +6,4 @@ public record WeaponStats(
         double reachModifier,
         double sweepRatio,
         double miningSpeed,
-        int harvestLevel) {
-}
+        int harvestLevel) {}

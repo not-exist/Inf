@@ -3,8 +3,7 @@ package com.inf.tools;
 import com.inf.forge.ForgeBalance;
 
 public final class BalanceSim {
-    private BalanceSim() {
-    }
+    private BalanceSim() {}
 
     public static void main(String[] args) {
         int trials = 100_000;

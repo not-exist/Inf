@@ -10,8 +10,7 @@ public final class ForgeMenuTransfer {
     public static final int SLOT_OUTPUT = 2;
     public static final int MACHINE_SLOTS = 3;
 
-    private ForgeMenuTransfer() {
-    }
+    private ForgeMenuTransfer() {}
 
     /** Destination slot range for an item shift-clicked from the player inventory. */
     public static Range destinationFor(boolean blade, boolean hammer) {

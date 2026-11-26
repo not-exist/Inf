@@ -27,8 +27,7 @@ public class ForgeButton extends Button {
         int stateV = active && isHoveredOrFocused() ? v + STATE_OFFSET : v;
         graphics.blit(TEXTURE, getX(), getY(), u, stateV, getWidth(), getHeight(), TEXTURE_SIZE, TEXTURE_SIZE);
         if (!active) {
-            graphics.fill(
-                    getX() + 1, getY() + 1, getX() + getWidth() - 1, getY() + getHeight() - 1, 0x66000000);
+            graphics.fill(getX() + 1, getY() + 1, getX() + getWidth() - 1, getY() + getHeight() - 1, 0x66000000);
         }
         graphics.drawCenteredString(
                 Minecraft.getInstance().font,

@@ -13,6 +13,5 @@ public final class ModDataComponents {
     public static final Supplier<DataComponentType<BladeData>> BLADE_DATA = DATA_COMPONENTS.registerComponentType(
             "blade_data", builder -> builder.persistent(BladeData.CODEC).networkSynchronized(BladeData.STREAM_CODEC));
 
-    private ModDataComponents() {
-    }
+    private ModDataComponents() {}
 }

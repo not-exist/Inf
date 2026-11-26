@@ -12,8 +12,7 @@ public final class InfConfig {
             BUILDER.defineInRange("riskPerStrike", 0.0014, 0.0, 1.0);
     private static final ModConfigSpec.DoubleValue RISK_PER_VALUE =
             BUILDER.defineInRange("riskPerValue", 0.00003, 0.0, 1.0);
-    private static final ModConfigSpec.DoubleValue MAX_RISK =
-            BUILDER.defineInRange("maxRisk", 0.85, 0.0, 1.0);
+    private static final ModConfigSpec.DoubleValue MAX_RISK = BUILDER.defineInRange("maxRisk", 0.85, 0.0, 1.0);
     private static final ModConfigSpec.IntValue BASE_GAIN = BUILDER.defineInRange("baseGain", 12, 0, 1000);
     private static final ModConfigSpec.IntValue GAIN_PER_STRIKE = BUILDER.defineInRange("gainPerStrike", 1, 0, 1000);
     private static final ModConfigSpec.IntValue GAIN_VARIANCE = BUILDER.defineInRange("gainVariance", 8, 0, 1000);
@@ -28,8 +27,7 @@ public final class InfConfig {
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
-    private InfConfig() {
-    }
+    private InfConfig() {}
 
     public static ForgeBalance forgeBalance() {
         return ForgeBalance.of(

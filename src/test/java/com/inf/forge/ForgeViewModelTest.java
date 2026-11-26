@@ -39,7 +39,8 @@ class ForgeViewModelTest {
         BladeData blade = new BladeData(WeaponKind.AXE, 240, 12, 1L);
         ForgeViewModel view = ForgeViewModel.of(blade, false, 0, 0, 10, B);
         assertEquals(view.get(ForgeViewModel.BREAK_PERMILLE), view.get(ForgeViewModel.RISK_PERMILLE));
-        assertEquals(ForgeViewModel.permille(ForgeRates.of(240, 12, false, B).breakChance()),
+        assertEquals(
+                ForgeViewModel.permille(ForgeRates.of(240, 12, false, B).breakChance()),
                 view.get(ForgeViewModel.BREAK_PERMILLE));
     }
 

@@ -18,8 +18,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 
 public final class ForgeService {
-    private ForgeService() {
-    }
+    private ForgeService() {}
 
     public static boolean strike(ForgeBlockEntity blockEntity, ServerPlayer player) {
         return strike(
@@ -30,8 +29,7 @@ public final class ForgeService {
     }
 
     /** Deterministic entry point used by tests; production uses randomized rolls. */
-    public static boolean strike(
-            ForgeBlockEntity blockEntity, ServerPlayer player, double outcomeRoll, int gainRoll) {
+    public static boolean strike(ForgeBlockEntity blockEntity, ServerPlayer player, double outcomeRoll, int gainRoll) {
         if (!(blockEntity.getLevel() instanceof ServerLevel level)) {
             return false;
         }
@@ -52,8 +50,8 @@ public final class ForgeService {
         }
 
         boolean frenzy = blockEntity.frenzyStrikesLeft() > 0;
-        StrikeOutcome outcome = ForgeMath.strike(
-                data.value(), data.strikes(), outcomeRoll, gainRoll, frenzy, InfConfig.forgeBalance());
+        StrikeOutcome outcome =
+                ForgeMath.strike(data.value(), data.strikes(), outcomeRoll, gainRoll, frenzy, InfConfig.forgeBalance());
 
         switch (outcome.outcome()) {
             case BREAK -> {
@@ -117,7 +115,11 @@ public final class ForgeService {
                 new BladeData(data.kind(), outcome.value(), outcome.strikes(), data.seed()));
     }
 
-    private static void particles(ServerLevel level, ForgeBlockEntity blockEntity, net.minecraft.core.particles.ParticleOptions type, int count) {
+    private static void particles(
+            ServerLevel level,
+            ForgeBlockEntity blockEntity,
+            net.minecraft.core.particles.ParticleOptions type,
+            int count) {
         level.sendParticles(
                 type,
                 blockEntity.getBlockPos().getX() + 0.5,
@@ -138,7 +140,11 @@ public final class ForgeService {
         BladeData data = blade.get(ModDataComponents.BLADE_DATA.get());
         if (data == null
                 || !WeaponSettlement.canStop(
-                        data.value(), blockEntity.inventory().getStackInSlot(ForgeBlockEntity.SLOT_OUTPUT).isEmpty())) {
+                        data.value(),
+                        blockEntity
+                                .inventory()
+                                .getStackInSlot(ForgeBlockEntity.SLOT_OUTPUT)
+                                .isEmpty())) {
             return false;
         }
 
@@ -166,8 +172,7 @@ public final class ForgeService {
             case RARE -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.RARE));
             case EPIC -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.EPIC));
             case LEGENDARY -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.LEGENDARY));
-            case CRUDE -> {
-            }
+            case CRUDE -> {}
         }
         ForgeAdvancements.awardAllKindsIfDone(player);
     }

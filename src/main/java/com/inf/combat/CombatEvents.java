@@ -9,8 +9,7 @@ import net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent;
 
 @EventBusSubscriber(modid = Inf.MODID)
 public final class CombatEvents {
-    private CombatEvents() {
-    }
+    private CombatEvents() {}
 
     @SubscribeEvent
     public static void onKnockback(LivingKnockBackEvent event) {

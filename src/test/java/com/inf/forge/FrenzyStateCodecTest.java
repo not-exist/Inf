@@ -39,7 +39,11 @@ class FrenzyStateCodecTest {
     void unknownKind_isRejected() {
         var input = com.google.gson.JsonParser.parseString("{\"progress\":{\"warpaxe\":3}}");
         try {
-            assertTrue(FrenzyStateCodec.CODEC.parse(JsonOps.INSTANCE, input).error().isPresent(),
+            assertTrue(
+                    FrenzyStateCodec.CODEC
+                            .parse(JsonOps.INSTANCE, input)
+                            .error()
+                            .isPresent(),
                     "unknown kind should not decode");
         } catch (RuntimeException expected) {
             // DFU may surface the mapping failure as an exception instead of an error result.

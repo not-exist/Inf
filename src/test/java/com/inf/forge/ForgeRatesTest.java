@@ -13,7 +13,10 @@ class ForgeRatesTest {
         for (int value : new int[] {0, 100, 450, 999}) {
             for (int strikes : new int[] {0, 5, 30}) {
                 double broken = ForgeMath.breakChance(value, strikes, B);
-                assertEquals((1.0 - broken) * 0.08, ForgeRates.of(value, strikes, false, B).damageChance(), 1e-12);
+                assertEquals(
+                        (1.0 - broken) * 0.08,
+                        ForgeRates.of(value, strikes, false, B).damageChance(),
+                        1e-12);
             }
         }
     }
@@ -23,9 +26,7 @@ class ForgeRatesTest {
         double broken = ForgeMath.breakChance(240, 12, B);
         double damage = (1.0 - broken) * 0.08;
         assertEquals(
-                (1.0 - broken - damage) * 0.15,
-                ForgeRates.of(240, 12, false, B).greatChance(),
-                1e-12);
+                (1.0 - broken - damage) * 0.15, ForgeRates.of(240, 12, false, B).greatChance(), 1e-12);
     }
 
     @Test
@@ -71,9 +72,8 @@ class ForgeRatesTest {
     }
 
     private static void assertInUnitInterval(ForgeRates rates) {
-        for (double chance : new double[] {
-            rates.breakChance(), rates.damageChance(), rates.successChance(), rates.greatChance()
-        }) {
+        for (double chance :
+                new double[] {rates.breakChance(), rates.damageChance(), rates.successChance(), rates.greatChance()}) {
             assertTrue(chance >= 0.0 && chance <= 1.0, "chance " + chance);
         }
     }

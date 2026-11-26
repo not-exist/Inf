@@ -1,7 +1,6 @@
 package com.inf.weapon;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -9,10 +8,22 @@ import org.junit.jupiter.api.Test;
 class WeaponStatsTableTest {
     @Test
     void sword_endpointsMatchDesign() {
-        assertEquals(4.0, WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.CRUDE).attackDamage(), 1e-9);
-        assertEquals(11.0, WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.LEGENDARY).attackDamage(), 1e-9);
-        assertEquals(-2.4, WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.CRUDE).attackSpeedModifier(), 1e-9);
-        assertEquals(-2.0, WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.LEGENDARY).attackSpeedModifier(), 1e-9);
+        assertEquals(
+                4.0,
+                WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.CRUDE).attackDamage(),
+                1e-9);
+        assertEquals(
+                11.0,
+                WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.LEGENDARY).attackDamage(),
+                1e-9);
+        assertEquals(
+                -2.4,
+                WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.CRUDE).attackSpeedModifier(),
+                1e-9);
+        assertEquals(
+                -2.0,
+                WeaponStatsTable.forTier(WeaponKind.SWORD, WeaponTier.LEGENDARY).attackSpeedModifier(),
+                1e-9);
     }
 
     @Test
@@ -32,9 +43,18 @@ class WeaponStatsTableTest {
 
     @Test
     void pickaxe_harvestLevelRisesToDiamond() {
-        assertEquals(1, WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.CRUDE).harvestLevel());
-        assertEquals(4, WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.LEGENDARY).harvestLevel());
-        assertEquals(15.0, WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.LEGENDARY).miningSpeed(), 1e-9);
+        assertEquals(
+                1,
+                WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.CRUDE).harvestLevel());
+        assertEquals(
+                4,
+                WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.LEGENDARY)
+                        .harvestLevel());
+        assertEquals(
+                15.0,
+                WeaponStatsTable.forTier(WeaponKind.PICKAXE, WeaponTier.LEGENDARY)
+                        .miningSpeed(),
+                1e-9);
     }
 
     @Test

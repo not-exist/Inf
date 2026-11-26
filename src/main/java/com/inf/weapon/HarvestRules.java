@@ -1,8 +1,7 @@
 package com.inf.weapon;
 
 public final class HarvestRules {
-    private HarvestRules() {
-    }
+    private HarvestRules() {}
 
     public static int requiredLevel(boolean needsStone, boolean needsIron, boolean needsDiamond) {
         if (needsDiamond) {

@@ -1,8 +1,7 @@
 package com.inf.forge;
 
 public final class ForgeMath {
-    private ForgeMath() {
-    }
+    private ForgeMath() {}
 
     public static double breakChance(int value, int strikes, ForgeBalance balance) {
         return Math.min(
@@ -13,18 +12,11 @@ public final class ForgeMath {
     public static int valueGain(int strikes, int gainRoll0to99, ForgeBalance balance) {
         int roll = Math.max(0, Math.min(99, gainRoll0to99));
         int progress = Math.min(strikes / 2 * balance.gainPerStrike(), 10);
-        return Math.max(
-                balance.minGain(),
-                balance.baseGain() + progress + roll * balance.gainVariance() / 100);
+        return Math.max(balance.minGain(), balance.baseGain() + progress + roll * balance.gainVariance() / 100);
     }
 
     public static StrikeOutcome strike(
-            int value,
-            int strikes,
-            double outcomeRoll,
-            int gainRoll,
-            boolean frenzy,
-            ForgeBalance balance) {
+            int value, int strikes, double outcomeRoll, int gainRoll, boolean frenzy, ForgeBalance balance) {
         ForgeRates rates = ForgeRates.of(value, strikes, frenzy, balance);
         ForgeOutcome outcome;
         if (outcomeRoll < rates.breakChance()) {

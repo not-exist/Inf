@@ -16,8 +16,10 @@ class BladeDataCodecTest {
         BladeData original = new BladeData(WeaponKind.SCYTHE, 720, 33, 123456789L);
         var encoded = BladeData.CODEC.encodeStart(JsonOps.INSTANCE, original);
         assertTrue(encoded.result().isPresent(), encoded.toString());
-        BladeData decoded =
-                BladeData.CODEC.parse(JsonOps.INSTANCE, encoded.result().orElseThrow()).result().orElseThrow();
+        BladeData decoded = BladeData.CODEC
+                .parse(JsonOps.INSTANCE, encoded.result().orElseThrow())
+                .result()
+                .orElseThrow();
         assertEquals(original, decoded);
     }
 
@@ -44,7 +46,8 @@ class BladeDataCodecTest {
     void unknownKind_isRejectedByThePersistentCodec() {
         var json = com.google.gson.JsonParser.parseString("{\"kind\":\"warpaxe\"}");
         try {
-            assertTrue(BladeData.CODEC.parse(JsonOps.INSTANCE, json).error().isPresent(),
+            assertTrue(
+                    BladeData.CODEC.parse(JsonOps.INSTANCE, json).error().isPresent(),
                     "unknown kind should not decode");
         } catch (RuntimeException expected) {
             // DFU may surface the mapping failure as an exception instead of an error result.
