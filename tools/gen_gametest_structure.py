@@ -35,6 +35,15 @@ def tag(tag_id: int, name: str, payload: bytes) -> bytes:
     return bytes([tag_id]) + _name(name) + payload
 
 
+def compound_body(tags: bytes) -> bytes:
+    """Payload of a compound: its named tags followed by TAG_END.
+
+    List elements are payloads only, so a compound inside a list uses this
+    without the tag id or name prefix.
+    """
+    return tags + bytes([TAG_END])
+
+
 def string(value: str) -> bytes:
     raw = value.encode("utf-8")
     return struct.pack(">H", len(raw)) + raw
@@ -50,8 +59,8 @@ def list_payload(element_id: int, payloads: list[bytes]) -> bytes:
 
 def build() -> bytes:
     # Palette: index 0 = air, index 1 = stone.
-    air = tag(TAG_COMPOUND, "", tag(TAG_STRING, "Name", string("minecraft:air")))
-    stone = tag(TAG_COMPOUND, "", tag(TAG_STRING, "Name", string("minecraft:stone")))
+    air = compound_body(tag(TAG_STRING, "Name", string("minecraft:air")))
+    stone = compound_body(tag(TAG_STRING, "Name", string("minecraft:stone")))
     palette = tag(TAG_LIST, "palette", list_payload(TAG_COMPOUND, [air, stone]))
 
     # Blocks: one stone per column at y=0 (state index 1).
@@ -59,7 +68,7 @@ def build() -> bytes:
     for x in range(SIZE[0]):
         for z in range(SIZE[2]):
             pos = tag(TAG_LIST, "pos", list_payload(TAG_INT, [int_payload(x), int_payload(0), int_payload(z)]))
-            blocks.append(tag(TAG_COMPOUND, "", pos + tag(TAG_INT, "state", int_payload(1))))
+            blocks.append(compound_body(pos + tag(TAG_INT, "state", int_payload(1))))
     blocks_tag = tag(TAG_LIST, "blocks", list_payload(TAG_COMPOUND, blocks))
     entities = tag(TAG_LIST, "entities", list_payload(TAG_COMPOUND, []))
 
@@ -70,7 +79,7 @@ def build() -> bytes:
         + blocks_tag
         + entities
     )
-    return bytes([TAG_COMPOUND]) + _name("") + root + bytes([TAG_END])
+    return bytes([TAG_COMPOUND]) + _name("") + compound_body(root)
 
 
 def main() -> None:

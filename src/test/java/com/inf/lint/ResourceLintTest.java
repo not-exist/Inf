@@ -37,8 +37,13 @@ class ResourceLintTest {
             assertNotNull(display, entry.getKey() + " has no display");
             assertLangKey(display.getAsJsonObject("title").get("translate").getAsString());
             assertLangKey(display.getAsJsonObject("description").get("translate").getAsString());
-            assertTrue(display.getAsJsonObject("icon").get("id").getAsString().startsWith("inf:"),
-                    entry.getKey() + " icon must be an Inf item");
+            String icon = display.getAsJsonObject("icon").get("id").getAsString();
+            if (icon.startsWith("inf:")) {
+                assertTrue(Files.exists(ASSETS.resolve("models/item/" + icon.substring(4) + ".json")),
+                        entry.getKey() + " icon " + icon + " has no item model");
+            } else {
+                assertTrue(icon.startsWith("minecraft:"), entry.getKey() + " icon namespace");
+            }
         }
     }
 

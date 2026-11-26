@@ -26,8 +26,9 @@ class HammerEdgeCaseTest {
     }
 
     @Test
-    void futureLastStrikeBlocks() {
-        assertFalse(ForgeTiming.canStrike(100, 104, 4));
-        assertTrue(ForgeTiming.canStrike(104, 103, 4));
+    void cooldownUsesTheStrikeTimestamp() {
+        assertFalse(ForgeTiming.canStrike(104, 103, 4), "one tick is not enough");
+        assertFalse(ForgeTiming.canStrike(100, 104, 4), "a future timestamp keeps blocking");
+        assertTrue(ForgeTiming.canStrike(108, 104, 4), "four ticks is enough");
     }
 }
