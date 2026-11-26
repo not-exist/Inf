@@ -52,28 +52,28 @@ jobs:
     needs: [validate, format]
     uses: ./.github/workflows/_jdkmatrix.yml
     with:
-      distributions: ${{ inputs.scope == 'quick' && '["temurin","corretto"]' || '["temurin","oracle-openjdk","corretto","zulu","oracle"]' }}
+      distributions: ${{ github.event.inputs.scope == 'quick' && '["temurin","corretto"]' || '["temurin","oracle-openjdk","corretto","zulu","oracle"]' }}
 
   build:
     name: Build
     needs: [validate, format, lint]
     uses: ./.github/workflows/_build.yml
     with:
-      scope: ${{ inputs.scope || 'full' }}
+      scope: ${{ github.event.inputs.scope || 'full' }}
 
   test:
     name: Test
     needs: jdk
     uses: ./.github/workflows/_test.yml
     with:
-      scope: ${{ inputs.scope || 'full' }}
+      scope: ${{ github.event.inputs.scope || 'full' }}
 
   gui:
     name: GUI
     needs: build
     uses: ./.github/workflows/_gui.yml
     with:
-      scope: ${{ inputs.scope || 'full' }}
+      scope: ${{ github.event.inputs.scope || 'full' }}
 
   package:
     name: Package
