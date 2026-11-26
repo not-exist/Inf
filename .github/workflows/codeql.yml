@@ -47,7 +47,11 @@ jobs:
           queries: security-extended
       - if: matrix.language == 'java-kotlin'
         name: Compile for extraction
-        run: ./gradlew --no-daemon --stacktrace --console=plain compileJava
+        # Extract from every source set: test, GameTest and client-test code is code
+        # that can carry an injection or a resource leak just as main code can.
+        run: >
+          ./gradlew --no-daemon --stacktrace --console=plain
+          compileJava compileTestJava compileGametestJava compileClienttestJava
       - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934  # v4.39.5
         with:
           category: /language:${{ matrix.language }}

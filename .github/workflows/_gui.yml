@@ -65,21 +65,7 @@ jobs:
       - name: Run the client with real input (Linux)
         if: runner.os == 'Linux'
         shell: bash
-        run: |
-          set -euo pipefail
-          # One shell owns the display, the window manager, the client and the driver, so
-          # the injected events and the window live in the same X session.
-          Xvfb :99 -screen 0 1280x800x24 &
-          xvfb_pid=$!
-          export DISPLAY=:99
-          trap 'kill $client_pid $xvfb_pid 2>/dev/null || true' EXIT
-          sleep 2
-          openbox --sm-disable > /dev/null 2>&1 &
-          sleep 1
-          ./gradlew --no-daemon --console=plain runClientTest > client.log 2>&1 &
-          client_pid=$!
-          # The harness writes run/clienttest/state.json; wait for it before injecting.
-          python3 tools/gui_driver/driver.py --os linux
+        run: bash tools/gui_driver/run_linux.sh
 
       - name: Run the client with real input (Windows)
         if: runner.os == 'Windows'

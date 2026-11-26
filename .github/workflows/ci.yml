@@ -68,7 +68,14 @@ jobs:
     with:
       scope: ${{ inputs.scope || 'full' }}
 
+  gui:
+    name: GUI
+    needs: build
+    uses: ./.github/workflows/_gui.yml
+    with:
+      scope: ${{ inputs.scope || 'full' }}
+
   package:
     name: Package
-    needs: [test, build]
+    needs: [test, gui]
     uses: ./.github/workflows/_package.yml
