@@ -22,6 +22,16 @@ public final class ForgeService {
     }
 
     public static boolean strike(ForgeBlockEntity blockEntity, ServerPlayer player) {
+        return strike(
+                blockEntity,
+                player,
+                player.getRandom().nextDouble(),
+                player.getRandom().nextInt(100));
+    }
+
+    /** Deterministic entry point used by tests; production uses randomized rolls. */
+    public static boolean strike(
+            ForgeBlockEntity blockEntity, ServerPlayer player, double outcomeRoll, int gainRoll) {
         if (!(blockEntity.getLevel() instanceof ServerLevel level)) {
             return false;
         }
@@ -43,12 +53,7 @@ public final class ForgeService {
 
         boolean frenzy = blockEntity.frenzyStrikesLeft() > 0;
         StrikeOutcome outcome = ForgeMath.strike(
-                data.value(),
-                data.strikes(),
-                player.getRandom().nextDouble(),
-                player.getRandom().nextInt(100),
-                frenzy,
-                InfConfig.forgeBalance());
+                data.value(), data.strikes(), outcomeRoll, gainRoll, frenzy, InfConfig.forgeBalance());
 
         switch (outcome.outcome()) {
             case BREAK -> {
@@ -57,14 +62,14 @@ public final class ForgeService {
                 level.playSound(
                         null, blockEntity.getBlockPos(), SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 0.9F, 0.9F);
                 particles(level, blockEntity, ParticleTypes.CRIT, 14);
-                ForgeAdvancements.award(player, "break_blade");
+                ForgeAdvancements.award(player, ForgeAdvancements.BREAK_BLADE);
             }
             case DAMAGE -> {
                 updateBlade(blade, data, outcome);
                 level.playSound(
                         null, blockEntity.getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.7F, 0.55F);
                 particles(level, blockEntity, ParticleTypes.SMOKE, 10);
-                ForgeAdvancements.award(player, "damage_blade");
+                ForgeAdvancements.award(player, ForgeAdvancements.DAMAGE_BLADE);
             }
             case SUCCESS -> {
                 updateBlade(blade, data, outcome);
@@ -84,16 +89,16 @@ public final class ForgeService {
                 level.playSound(
                         null, blockEntity.getBlockPos(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.35F, 1.6F);
                 particles(level, blockEntity, ParticleTypes.ENCHANT, 18);
-                ForgeAdvancements.award(player, "great_success");
+                ForgeAdvancements.award(player, ForgeAdvancements.GREAT_SUCCESS);
             }
         }
-        ForgeAdvancements.award(player, "first_strike");
+        ForgeAdvancements.award(player, ForgeAdvancements.FIRST_STRIKE);
 
         int nextDamage = hammer.getDamageValue() + 1;
         if (nextDamage >= hammer.getMaxDamage()) {
             blockEntity.inventory().setStackInSlot(ForgeBlockEntity.SLOT_HAMMER, ItemStack.EMPTY);
             level.playSound(null, blockEntity.getBlockPos(), SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 0.8F, 0.9F);
-            ForgeAdvancements.award(player, "hammer_break");
+            ForgeAdvancements.award(player, ForgeAdvancements.HAMMER_BREAK);
         } else {
             hammer.setDamageValue(nextDamage);
         }
@@ -152,15 +157,15 @@ public final class ForgeService {
                 ModAttachments.FRENZY,
                 player.getData(ModAttachments.FRENZY).onWeaponCompleted(kind, InfConfig.frenzyRequired()));
 
-        ForgeAdvancements.award(player, "first_weapon");
-        ForgeAdvancements.award(player, "kind_" + kind.id);
+        ForgeAdvancements.award(player, ForgeAdvancements.FIRST_WEAPON);
+        ForgeAdvancements.award(player, ForgeAdvancements.kind(kind));
         WeaponTier tier = WeaponTier.forValue(value);
         switch (tier) {
-            case COMMON -> ForgeAdvancements.award(player, "tier_common");
-            case FINE -> ForgeAdvancements.award(player, "tier_fine");
-            case RARE -> ForgeAdvancements.award(player, "tier_rare");
-            case EPIC -> ForgeAdvancements.award(player, "tier_epic");
-            case LEGENDARY -> ForgeAdvancements.award(player, "tier_legendary");
+            case COMMON -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.COMMON));
+            case FINE -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.FINE));
+            case RARE -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.RARE));
+            case EPIC -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.EPIC));
+            case LEGENDARY -> ForgeAdvancements.award(player, ForgeAdvancements.tier(WeaponTier.LEGENDARY));
             case CRUDE -> {
             }
         }
@@ -181,7 +186,7 @@ public final class ForgeService {
         player.setData(ModAttachments.FRENZY, state.activated());
         level.playSound(null, blockEntity.getBlockPos(), SoundEvents.BLAZE_SHOOT, SoundSource.BLOCKS, 0.5F, 1.2F);
         blockEntity.setChanged();
-        ForgeAdvancements.award(player, "frenzy");
+        ForgeAdvancements.award(player, ForgeAdvancements.FRENZY);
         return true;
     }
 }

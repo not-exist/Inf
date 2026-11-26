@@ -63,9 +63,8 @@ jobs:
       - uses: ./.github/actions/gradle-setup
         with:
           neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
-      - name: Test
-        run: ./gradlew --no-daemon --stacktrace --console=plain test
-        # Phase 2: replace `test` with `check` to add jacocoTestCoverageVerification.
+      - name: Test and coverage gate
+        run: ./gradlew --no-daemon --stacktrace --console=plain check
       - name: Summarize test results
         if: always()
         shell: bash
@@ -109,13 +108,47 @@ jobs:
             build/reports/tests/test
           if-no-files-found: ignore
           retention-days: 7
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: coverage-${{ github.sha }}
+          path: build/reports/jacoco/test
+          if-no-files-found: ignore
+          retention-days: 7
 
-  # Phase 3: add the `gametest` job here once src/gametest exists.
-  # An empty GameTestServer run fails by design; see docs/test-plan.md §7.
+  gametest:
+    name: Game tests
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+      - name: Prepare run directory
+        run: |
+          mkdir -p run
+          printf 'eula=true\n' > run/eula.txt
+      - name: Run GameTests
+        run: ./gradlew --no-daemon --stacktrace --console=plain runGameTestServer
+      - name: Upload GameTest logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: gametest-logs-${{ github.sha }}
+          path: |
+            run/logs
+            run/crash-reports
+          if-no-files-found: ignore
+          retention-days: 7
 
   package:
     name: Package
-    needs: [unit-test]
+    needs: [unit-test, gametest]
     permissions:
       contents: read
     uses: ./.github/workflows/package.yml

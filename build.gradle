@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'jacoco'
     id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
@@ -24,6 +25,14 @@ sourceSets.main.resources {
     // Exclude common development only resources from finalized outputs
     exclude("**/*.bbmodel") // BlockBench project files
     exclude("src/generated/**/.cache") // datagen cache files
+}
+
+// GameTests live in their own source set so they never ship in the release jar.
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
 }
 
 repositories {
@@ -69,6 +78,7 @@ neoForge {
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             type = "gameTestServer"
+            sourceSet = sourceSets.gametest
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
@@ -97,12 +107,16 @@ neoForge {
         }
     }
 
+    // Give the isolated GameTest source set the Minecraft/NeoForge classpath.
+    addModdingDependenciesTo sourceSets.gametest
+
     mods {
         // define mod <-> source bindings
         // these are used to tell the game which sources are for which mod
         // multi mod projects should define one per mod
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gametest)
         }
     }
 }
@@ -118,6 +132,7 @@ configurations {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -186,6 +201,49 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+jacocoTestReport {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn tasks.named('test')
+    violationRules {
+        rule {
+            element = 'CLASS'
+            includes = [
+                    'com.inf.forge.ForgeMath',
+                    'com.inf.forge.ForgeRates',
+                    'com.inf.forge.ForgeBalance',
+                    'com.inf.forge.HammerMath',
+                    'com.inf.forge.ForgeTiming',
+                    'com.inf.forge.FrenzyState',
+                    'com.inf.forge.WeaponSettlement',
+                    'com.inf.forge.ForgeViewModel',
+                    'com.inf.weapon.*',
+                    'com.inf.menu.ForgeMenuRules',
+                    'com.inf.menu.ForgeMenuTransfer',
+                    'com.inf.registry.FrenzyStateCodec',
+                    'com.inf.item.component.BladeData',
+                    'com.inf.tools.BalanceSimulator'
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestCoverageVerification')
 }
 
 tasks.register('balanceSim', JavaExec) {

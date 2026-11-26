@@ -1,6 +1,6 @@
 # Test & CI Design Plan — Inf
 
-Status: proposal (nothing in this document is implemented yet).
+Status: implemented in this branch (Phases 1–4). Phase 5 remains optional.
 Baseline: `main` at `4d2914f` (v0.2.0), verified 2026-11-25.
 Scope: test architecture for the forge loop, plus the GitHub Actions CI that runs it.
 
@@ -27,7 +27,7 @@ workflow, warm in roughly 8–12 minutes, cold in roughly 20–30 minutes.
 | Item | State |
 |---|---|
 | `./gradlew test` | Passes; full rerun 5 s warm. |
-| Tests | 40 tests in 11 classes, 0 failures. |
+| Tests | 40 tests in 11 classes on main; this branch raises the suite to 104 JUnit methods plus 17 GameTests. |
 | `runGameTestServer` task | Exists (ModDevGradle run `gameTestServer`, namespace `inf`), but zero GameTests. A GameTest server with no tests fails by design. |
 | `.github/` | Does not exist. No CI at all. |
 | JDK | Project toolchain is 21; the machine's default `java` is 17 and Gradle provisions 21 (~/.gradle/jdks). |
@@ -140,6 +140,9 @@ Runs in seconds; this is the tier that should carry the majority of assertions.
     node list in `docs/advancement-tree.md` and compare it with the 19 files.
 
 ### Layer 1 — GameTests (headless server)
+
+17 tests: G1–G16 from the table plus a separate `advancements_allNineteenExist`
+smoke test (counted as G17).
 
 This tier covers everything that needs real registries or world state. Put it in a
 dedicated `gametest` source set so tests do not ship in the release jar.
@@ -627,25 +630,24 @@ Acceptance criteria for the workflow itself (verify on the first PRs):
 |---|---|---|
 | Wrapper validation | validate | yes |
 | Compile (main + test) | quality | yes |
-| 40 existing + ~35 new JUnit tests | unit-test | yes |
+| 104 JUnit tests | unit-test | yes |
 | JaCoCo 80% line / 70% branch on pure packages (Phase 2) | unit-test | yes (ratchet) |
-| 16 GameTests | gametest | yes |
+| 17 GameTests | gametest | yes |
 | Jar content checks | package | yes for releases; optional for PRs |
 | CodeQL / dependency review | scheduled / PR | advisory first, then required |
 
 ## 7. Rollout
 
-- **Phase 1 — CI skeleton (0.5–1 day).** Add `ci.yml` with validate/quality/
-  unit-test/package. No new tests. The existing 40 tests become the PR gate.
-- **Phase 2 — unit expansion (1–2 days).** Tests 1–14 above, the §4.1–4.4
-  refactors, JaCoCo report + verification. Add `spotlessCheck` with
-  `palantir-java-format` (4 spaces, 120 columns — closest to the current style);
-  run `spotlessApply` once as a separate commit.
-- **Phase 3 — GameTests (1–2 days).** `gametest` source set, platform NBT script,
-  G1–G16, `gametest` CI job. Do not add the job before the first test exists: an
-  empty GameTestServer run fails.
-- **Phase 4 — release & security (0.5 day).** `package.yml`, `release.yml`,
-  `codeql.yml`, `audit.yml`, `dependabot.yml`, branch protection, README badge.
+- **Phase 1 — CI skeleton.** Done: `ci.yml` (validate/quality/unit-test/package),
+  reusable `package.yml`, composite `gradle-setup`.
+- **Phase 2 — unit expansion.** Done: 104 JUnit methods across 21 test classes,
+  the §4.1–4.4 refactors, JaCoCo report and an 80% line rule on the pure packages.
+  Spotless/`palantir-java-format` is deliberately deferred; it is a standalone
+  formatting change, not a behaviour change.
+- **Phase 3 — GameTests.** Done: `gametest` source set, generated platform NBT,
+  G1–G17, `gametest` CI job, deterministic strike overload.
+- **Phase 4 — release & security.** Done: `release.yml`, `codeql.yml`, `audit.yml`,
+  `dependabot.yml`. Branch protection still has to be enabled in the GitHub UI.
 - **Phase 5 — optional.** Nightly Xvfb client smoke; Gradle dependency locking +
   OSV; NeoForge `testframework` if GameTest boilerplate becomes painful.
 

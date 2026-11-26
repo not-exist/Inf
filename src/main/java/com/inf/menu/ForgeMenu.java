@@ -186,16 +186,14 @@ public class ForgeMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
         } else {
-            boolean moved = false;
-            if (stack.getItem() instanceof BladeBlankItem) {
-                moved = moveItemStackTo(stack, SLOT_BLADE, SLOT_BLADE + 1, false);
-            } else if (stack.getItem() instanceof HammerItem) {
-                moved = moveItemStackTo(stack, SLOT_HAMMER, SLOT_HAMMER + 1, false);
-            }
+            ForgeMenuTransfer.Range destination = ForgeMenuTransfer.destinationFor(
+                    stack.getItem() instanceof BladeBlankItem, stack.getItem() instanceof HammerItem);
+            boolean moved = destination != null && moveItemStackTo(stack, destination.start(), destination.end(), false);
             if (!moved) {
-                int start = index < 30 ? 30 : 3;
-                int end = index < 30 ? slots.size() : 30;
-                if (!moveItemStackTo(stack, start, end, false)) {
+                ForgeMenuTransfer.Range range = index < 30
+                        ? ForgeMenuTransfer.hotbar(slots.size())
+                        : ForgeMenuTransfer.mainInventory(slots.size());
+                if (!moveItemStackTo(stack, range.start(), range.end(), false)) {
                     return ItemStack.EMPTY;
                 }
             }

@@ -1,6 +1,7 @@
 package com.inf.weapon;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,79 @@ class WeaponStatsTableTest {
                 double damage = WeaponStatsTable.forTier(kind, tier).attackDamage();
                 assertTrue(damage > previous, kind + " " + tier);
                 previous = damage;
+            }
+        }
+    }
+
+    @Test
+    void tableDefinesEveryKindAndTier() {
+        for (WeaponKind kind : WeaponKind.values()) {
+            for (WeaponTier tier : WeaponTier.values()) {
+                WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
+                assertTrue(stats.attackDamage() > 0, kind + " " + tier);
+                assertTrue(stats.attackSpeedModifier() <= 0, kind + " " + tier);
+                assertTrue(stats.harvestLevel() <= 4, kind + " " + tier);
+                assertTrue(stats.miningSpeed() >= 0, kind + " " + tier);
+            }
+        }
+    }
+
+    @Test
+    void miningStats_areZeroOutsideToolKinds() {
+        for (WeaponKind kind : WeaponKind.values()) {
+            boolean tool = kind == WeaponKind.PICKAXE || kind == WeaponKind.AXE;
+            for (WeaponTier tier : WeaponTier.values()) {
+                WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
+                if (!tool) {
+                    assertEquals(0.0, stats.miningSpeed(), 1e-9, kind + " " + tier);
+                    assertEquals(0, stats.harvestLevel(), kind + " " + tier);
+                }
+            }
+        }
+    }
+
+    @Test
+    void miningSpeedAndHarvest_areMonotonicForToolKinds() {
+        for (WeaponKind kind : new WeaponKind[] {WeaponKind.PICKAXE, WeaponKind.AXE}) {
+            double previousSpeed = -1;
+            int previousHarvest = -1;
+            for (WeaponTier tier : WeaponTier.values()) {
+                WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
+                assertTrue(stats.miningSpeed() > previousSpeed, kind + " " + tier);
+                assertTrue(stats.harvestLevel() >= previousHarvest, kind + " " + tier);
+                previousSpeed = stats.miningSpeed();
+                previousHarvest = stats.harvestLevel();
+            }
+        }
+    }
+
+    @Test
+    void sweepIsZeroForNonSweepingKinds_andReachSignIsKindSpecific() {
+        for (WeaponKind kind : WeaponKind.values()) {
+            for (WeaponTier tier : WeaponTier.values()) {
+                WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
+                if (kind != WeaponKind.SWORD && kind != WeaponKind.SCYTHE) {
+                    assertEquals(0.0, stats.sweepRatio(), 1e-9, kind + " " + tier);
+                }
+                if (kind == WeaponKind.DAGGER) {
+                    assertTrue(stats.reachModifier() < 0, kind + " " + tier);
+                } else if (kind == WeaponKind.SCYTHE) {
+                    assertTrue(stats.reachModifier() > 0, kind + " " + tier);
+                } else {
+                    assertEquals(0.0, stats.reachModifier(), 1e-9, kind + " " + tier);
+                }
+            }
+        }
+    }
+
+    @Test
+    void miningOnlyKinds_doNotGetExtraSweepOrReach() {
+        for (WeaponKind kind : new WeaponKind[] {WeaponKind.PICKAXE, WeaponKind.AXE}) {
+            for (WeaponTier tier : WeaponTier.values()) {
+                WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
+                assertEquals(0.0, stats.sweepRatio(), 1e-9);
+                assertEquals(0.0, stats.reachModifier(), 1e-9);
+                assertTrue(stats.miningSpeed() > 0);
             }
         }
     }

@@ -2,32 +2,30 @@ package com.inf.block;
 
 import com.inf.InfConfig;
 import com.inf.forge.ForgeBalance;
-import com.inf.forge.ForgeMath;
-import com.inf.forge.ForgeRates;
+import com.inf.forge.ForgeViewModel;
 import com.inf.item.component.BladeData;
 import com.inf.registry.ModAttachments;
 import com.inf.registry.ModDataComponents;
-import com.inf.weapon.WeaponTier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public final class ForgeData implements ContainerData {
-    public static final int VALUE = 0;
-    public static final int STRIKES = 1;
-    public static final int RISK_PERMILLE = 2;
-    public static final int TIER = 3;
-    public static final int FRENZY_READY = 4;
-    public static final int GAIN_MIN = 5;
-    public static final int GAIN_MAX = 6;
-    public static final int FRENZY_PROGRESS = 7;
-    public static final int FRENZY_ACTIVE = 8;
-    public static final int FRENZY_REQUIRED = 9;
-    public static final int BREAK_PERMILLE = 10;
-    public static final int DAMAGE_PERMILLE = 11;
-    public static final int SUCCESS_PERMILLE = 12;
-    public static final int GREAT_PERMILLE = 13;
-    public static final int SIZE = 14;
+    public static final int VALUE = ForgeViewModel.VALUE;
+    public static final int STRIKES = ForgeViewModel.STRIKES;
+    public static final int RISK_PERMILLE = ForgeViewModel.RISK_PERMILLE;
+    public static final int TIER = ForgeViewModel.TIER;
+    public static final int FRENZY_READY = ForgeViewModel.FRENZY_READY;
+    public static final int GAIN_MIN = ForgeViewModel.GAIN_MIN;
+    public static final int GAIN_MAX = ForgeViewModel.GAIN_MAX;
+    public static final int FRENZY_PROGRESS = ForgeViewModel.FRENZY_PROGRESS;
+    public static final int FRENZY_ACTIVE = ForgeViewModel.FRENZY_ACTIVE;
+    public static final int FRENZY_REQUIRED = ForgeViewModel.FRENZY_REQUIRED;
+    public static final int BREAK_PERMILLE = ForgeViewModel.BREAK_PERMILLE;
+    public static final int DAMAGE_PERMILLE = ForgeViewModel.DAMAGE_PERMILLE;
+    public static final int SUCCESS_PERMILLE = ForgeViewModel.SUCCESS_PERMILLE;
+    public static final int GREAT_PERMILLE = ForgeViewModel.GREAT_PERMILLE;
+    public static final int SIZE = ForgeViewModel.SIZE;
 
     private final ForgeBlockEntity blockEntity;
     private final Player player;
@@ -41,33 +39,19 @@ public final class ForgeData implements ContainerData {
 
     @Override
     public int get(int index) {
-        BladeData data = bladeData();
-        int value = data == null ? 0 : data.value();
-        int strikes = data == null ? 0 : data.strikes();
-        ForgeRates rates = data == null
-                ? new ForgeRates(0, 0, 0, 0)
-                : ForgeRates.of(value, strikes, blockEntity.frenzyStrikesLeft() > 0, balance);
-        return switch (index) {
-            case VALUE -> value;
-            case STRIKES -> strikes;
-            case RISK_PERMILLE -> permille(rates.breakChance());
-            case TIER -> WeaponTier.forValue(value).ordinal();
-            case FRENZY_READY -> player.getData(ModAttachments.FRENZY).ready() ? 1 : 0;
-            case GAIN_MIN -> data == null ? 0 : ForgeMath.valueGain(strikes, 0, balance);
-            case GAIN_MAX -> data == null ? 0 : ForgeMath.valueGain(strikes, 99, balance);
-            case FRENZY_PROGRESS -> data == null ? 0 : player.getData(ModAttachments.FRENZY).progress(data.kind());
-            case FRENZY_ACTIVE -> blockEntity.frenzyStrikesLeft();
-            case FRENZY_REQUIRED -> InfConfig.frenzyRequired();
-            case BREAK_PERMILLE -> permille(rates.breakChance());
-            case DAMAGE_PERMILLE -> permille(rates.damageChance());
-            case SUCCESS_PERMILLE -> permille(rates.successChance());
-            case GREAT_PERMILLE -> permille(rates.greatChance());
-            default -> 0;
-        };
+        return view().get(index);
     }
 
-    private static int permille(double chance) {
-        return (int) Math.round(chance * 1000.0);
+    private ForgeViewModel view() {
+        BladeData data = bladeData();
+        int progress = data == null ? 0 : player.getData(ModAttachments.FRENZY).progress(data.kind());
+        return ForgeViewModel.of(
+                data,
+                player.getData(ModAttachments.FRENZY).ready(),
+                progress,
+                blockEntity.frenzyStrikesLeft(),
+                InfConfig.frenzyRequired(),
+                balance);
     }
 
     public BladeData bladeData() {
