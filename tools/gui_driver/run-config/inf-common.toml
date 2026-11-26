@@ -1,0 +1,14 @@
+# Deterministic config for the GUI test: no strike cooldown so the driver does not
+# have to pace clicks, and no value animation so the screen reflects state at once.
+baseRisk = 0.015
+riskPerStrike = 0.0014
+riskPerValue = 3.0E-5
+maxRisk = 0.85
+baseGain = 12
+gainPerStrike = 1
+gainVariance = 8
+minGain = 4
+frenzyRequired = 10
+frenzyFreeStrikes = 3
+strikeCooldownTicks = 0
+uiAnimations = false

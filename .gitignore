@@ -46,3 +46,8 @@ repo/
 run/clienttest/
 run/screenshots/
 run/native/
+
+### GUI test logs ###
+/client.log
+/xvfb.log
+/wm.log

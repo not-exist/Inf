@@ -29,9 +29,14 @@ sourceSets.main.resources {
     exclude("src/generated/**/.cache") // datagen cache files
 }
 
-// GameTests live in their own source set so they never ship in the release jar.
+// GameTests and the client GUI harness live in their own source sets so that they
+// never ship in the release jar.
 sourceSets {
     gametest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+    clienttest {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
@@ -104,6 +109,18 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        // Launches the client with the GUI harness on the classpath. The harness
+        // drives a real forge interaction; tools/gui_driver injects the input.
+        clientTest {
+            client()
+            sourceSet = sourceSets.clienttest
+            systemProperty 'inf.clienttest', 'true'
+            systemProperty 'inf.clienttest.scenario', System.getProperty('inf.clienttest.scenario', 'default')
+            // Fresh, small, quiet window: the driver needs a deterministic layout.
+            programArguments.addAll '--width', '1280', '--height', '800'
+            jvmArgument '-Dfml.queryResult=confirm'
+        }
+
         data {
             data()
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
@@ -129,8 +146,10 @@ neoForge {
         }
     }
 
-    // Give the isolated GameTest and test source sets the Minecraft/NeoForge classpath.
+    // Give the isolated GameTest, client-test and test source sets the
+    // Minecraft/NeoForge classpath.
     addModdingDependenciesTo sourceSets.gametest
+    addModdingDependenciesTo sourceSets.clienttest
     addModdingDependenciesTo sourceSets.test
 
     mods {
@@ -140,6 +159,7 @@ neoForge {
         "${mod_id}" {
             sourceSet(sourceSets.main)
             sourceSet(sourceSets.gametest)
+            sourceSet(sourceSets.clienttest)
         }
     }
 }
@@ -377,6 +397,30 @@ tasks.register('prepareRunDir') {
                 'view-distance=4',
                 'simulation-distance=4'
         ].join('\n') + '\n'
+    }
+}
+
+// The GUI test needs deterministic settings: no strike cooldown, no value animation,
+// a fixed 1280x800 window at GUI scale 1 and a low render distance. Copying them in
+// Gradle keeps the driver free of shell-specific file handling.
+tasks.register('prepareClientTest') {
+    description = 'Write the deterministic options and config used by the GUI test.'
+    group = 'verification'
+    def runDir = layout.projectDirectory.dir('run').asFile
+    def sourceDir = layout.projectDirectory.dir('tools/gui_driver/run-config').asFile
+    outputs.upToDateWhen { false }
+    doLast {
+        def configDir = new File(runDir, 'config')
+        configDir.mkdirs()
+        new File(runDir, 'clienttest').mkdirs()
+        java.nio.file.Files.copy(
+                new File(sourceDir, 'options.txt').toPath(),
+                new File(runDir, 'options.txt').toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        java.nio.file.Files.copy(
+                new File(sourceDir, 'inf-common.toml').toPath(),
+                new File(configDir, 'inf-common.toml').toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
     }
 }
 

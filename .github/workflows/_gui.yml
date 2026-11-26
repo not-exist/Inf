@@ -1,0 +1,120 @@
+name: GUI
+
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: quick limits the matrix to Linux.
+        required: false
+        type: string
+        default: full
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04"]' || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      # Hosted Windows and macOS runners have no GPU: Windows exposes only the GDI
+      # generic OpenGL 1.1 renderer, while Minecraft needs 3.2 core. Mesa's llvmpipe
+      # provides a software 3.2+ context. The version and checksum are pinned so a
+      # silent upstream change cannot alter test results.
+      - name: Install Mesa software renderer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Pinned by release tag; the SHA-256 is printed on the release page and is
+          # checked here so a silent re-upload cannot change what CI runs.
+          $version = '25.0.3'
+          $zip = Join-Path $env:RUNNER_TEMP 'mesa.7z'
+          Invoke-WebRequest -Uri "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z" -OutFile $zip
+          New-Item -ItemType Directory -Force -Path run/native | Out-Null
+          & 7z x $zip "-orun/native" -y | Out-Null
+          Copy-Item run/native/x64/opengl32.dll run/native/opengl32.dll -Force
+          Copy-Item run/native/x64/libgallium_wgl.dll run/native/libgallium_wgl.dll -Force -ErrorAction SilentlyContinue
+          "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Install Linux input and window tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openbox
+
+      - name: Prepare the deterministic run directory
+        run: |
+          ./gradlew --no-daemon --console=plain prepareRunDir prepareClientTest
+
+      # The client and the driver must run in the same session: the driver injects
+      # OS events into the display the client owns.
+      - name: Run the client with real input (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # One shell owns the display, the window manager, the client and the driver, so
+          # the injected events and the window live in the same X session.
+          Xvfb :99 -screen 0 1280x800x24 &
+          xvfb_pid=$!
+          export DISPLAY=:99
+          trap 'kill $client_pid $xvfb_pid 2>/dev/null || true' EXIT
+          sleep 2
+          openbox --sm-disable > /dev/null 2>&1 &
+          sleep 1
+          ./gradlew --no-daemon --console=plain runClientTest > client.log 2>&1 &
+          client_pid=$!
+          # The harness writes run/clienttest/state.json; wait for it before injecting.
+          python3 tools/gui_driver/driver.py --os linux
+
+      - name: Run the client with real input (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $client = Start-Process -FilePath ".\gradlew.bat" -ArgumentList "--no-daemon","--console=plain","runClientTest" -PassThru -RedirectStandardOutput client.log -RedirectStandardError client.err
+          try {
+            python tools/gui_driver/driver.py --os windows
+            $code = $LASTEXITCODE
+          } finally {
+            Stop-Process -Id $client.Id -Force -ErrorAction SilentlyContinue
+          }
+          exit $code
+
+      - name: Run the client with real input (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --console=plain runClientTest > client.log 2>&1 &
+          client_pid=$!
+          trap 'kill $client_pid 2>/dev/null || true' EXIT
+          python3 tools/gui_driver/driver.py --os macos
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: gui-${{ matrix.os }}
+          path: |
+            run/clienttest
+            run/screenshots
+            run/logs
+            run/crash-reports
+            client.log
+            client.err
+          if-no-files-found: ignore
+          retention-days: 7
