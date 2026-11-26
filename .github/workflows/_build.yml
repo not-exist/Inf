@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   compile:
@@ -25,9 +24,7 @@ jobs:
         # Windows 10 and Windows 11 kernel families, and are the closest hosted
         # images to those desktops. macOS 15 is arm64; the Intel variant runs
         # on a schedule instead of every PR.
-        os: ${{ fromJSON(inputs.scope == 'quick'
-          && '["ubuntu-24.04","windows-2025"]'
-          || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04","windows-2025"]' || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

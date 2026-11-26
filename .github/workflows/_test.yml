@@ -20,9 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.scope == 'quick'
-          && '["ubuntu-24.04","windows-2025"]'
-          || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04","windows-2025"]' || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

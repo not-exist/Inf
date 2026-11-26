@@ -37,9 +37,6 @@ jobs:
   lint:
     name: Lint
     needs: validate
-    permissions:
-      contents: read
-      security-events: write
     uses: ./.github/workflows/_lint.yml
 
   format:
