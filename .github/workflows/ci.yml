@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c  # v6.4.1
+
+  quality:
+    name: Compile
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+      - name: Compile main and test sources
+        run: ./gradlew --no-daemon --stacktrace --console=plain compileJava compileTestJava compileGametestJava
+      # Phase 2: formatting gate, landed together with a one-time spotlessApply commit.
+      # - name: Formatting
+      #   run: ./gradlew --no-daemon --stacktrace --console=plain spotlessCheck
+      - name: Upload Gradle problems report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: gradle-problems-${{ github.sha }}
+          path: build/reports/problems
+          if-no-files-found: ignore
+          retention-days: 7
+
+  unit-test:
+    name: Unit tests
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+      - name: Test and coverage gate
+        run: ./gradlew --no-daemon --stacktrace --console=plain check
+      - name: Summarize test results
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob
+          import xml.etree.ElementTree as ET
+
+          tests = failures = errors = skipped = 0
+          rows = []
+          for path in sorted(glob.glob("build/test-results/test/*.xml")):
+              root = ET.parse(path).getroot()
+              t = int(root.get("tests", 0))
+              f = int(root.get("failures", 0))
+              e = int(root.get("errors", 0))
+              s = int(root.get("skipped", 0))
+              tests += t
+              failures += f
+              errors += e
+              skipped += s
+              if f or e:
+                  rows.append(f"| {root.get('name', '?')} | {t} | {f} | {e} |")
+
+          print("## Unit tests")
+          print()
+          print(f"{tests} tests, {failures} failures, {errors} errors, {skipped} skipped")
+          if rows:
+              print()
+              print("| Class | Tests | Failures | Errors |")
+              print("|---|---:|---:|---:|")
+              print("\n".join(rows))
+          PY
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: unit-test-reports-${{ github.sha }}
+          path: |
+            build/test-results/test
+            build/reports/tests/test
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: coverage-${{ github.sha }}
+          path: build/reports/jacoco/test
+          if-no-files-found: ignore
+          retention-days: 7
+
+  gametest:
+    name: Game tests
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+      - name: Prepare run directory
+        run: |
+          mkdir -p run
+          printf 'eula=true\n' > run/eula.txt
+      - name: Run GameTests
+        run: ./gradlew --no-daemon --stacktrace --console=plain runGameTestServer
+      - name: Upload GameTest logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: gametest-logs-${{ github.sha }}
+          path: |
+            run/logs
+            run/crash-reports
+          if-no-files-found: ignore
+          retention-days: 7
+
+  package:
+    name: Package
+    needs: [unit-test, gametest]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/package.yml
