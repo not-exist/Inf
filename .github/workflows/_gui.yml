@@ -20,7 +20,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04"]' || '["ubuntu-24.04","windows-2022","windows-2025","macos-15"]') }}
+        # macOS is absent on purpose: a hosted macOS runner has no GPU and its
+        # WindowServer offers no OpenGL pixel format at all, so the client cannot create
+        # a window ("NSGL: Failed to find a suitable pixel format" on every profile down
+        # to 3.2). Nothing about the mod can change that, and a permanently red required
+        # check would only teach people to ignore it.
+        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04"]' || '["ubuntu-24.04","windows-2022","windows-2025"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -45,8 +50,12 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z" -OutFile $zip
           New-Item -ItemType Directory -Force -Path run/native | Out-Null
           & 7z x $zip "-orun/native" -y | Out-Null
-          Copy-Item run/native/x64/opengl32.dll run/native/opengl32.dll -Force
-          Copy-Item run/native/x64/libgallium_wgl.dll run/native/libgallium_wgl.dll -Force -ErrorAction SilentlyContinue
+          # Windows resolves a DLL next to the process image and on PATH, not in an
+          # arbitrary directory, so the files have to sit in the game directory, which
+          # is also the working directory of the client process.
+          Copy-Item run/native/x64/opengl32.dll run/opengl32.dll -Force
+          Copy-Item run/native/x64/libgallium_wgl.dll run/libgallium_wgl.dll -Force -ErrorAction SilentlyContinue
+          Copy-Item run/native/x64/dxil.dll run/dxil.dll -Force -ErrorAction SilentlyContinue
           "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
           "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
           "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -86,16 +95,6 @@ jobs:
             }
           }
           exit $code
-
-      - name: Run the client with real input (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./gradlew --no-daemon --console=plain runClientTest > client.log 2>&1 &
-          client_pid=$!
-          trap 'kill $client_pid 2>/dev/null || true' EXIT
-          python3 tools/gui_driver/driver.py --os macos
 
       - name: Upload evidence
         if: always()

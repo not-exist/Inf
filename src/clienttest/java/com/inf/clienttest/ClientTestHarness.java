@@ -63,6 +63,9 @@ public final class ClientTestHarness {
     private static boolean forgeBuildRequested;
     private static volatile boolean forgeBuilt;
     private static int openMenuAttempt;
+    /** Game time at which buildForge ran; the client needs a few ticks to see the block. */
+    private static long forgeBuiltAt;
+
     private static long worldCreatedAt;
     private static boolean created;
     private static boolean clickSeen;
@@ -112,6 +115,7 @@ public final class ClientTestHarness {
                     forgeBuildRequested = true;
                     server.execute(() -> {
                         buildForge(player);
+                        forgeBuiltAt = player.level().getGameTime();
                         forgeBuilt = true;
                     });
                 }
@@ -122,14 +126,29 @@ public final class ClientTestHarness {
                 }
             }
             case PREPARING -> {
+                // A disconnect here means the client rejected the open-screen packet, which
+                // is what a block entity the client cannot see looks like. Say so instead
+                // of reporting a bare timeout later.
+                if (minecraft.getConnection() == null || minecraft.player == null) {
+                    fail("client disconnected while opening the forge screen; see run/logs/latest.log");
+                    return;
+                }
                 if (minecraft.screen instanceof com.inf.client.ForgeScreen) {
                     stage = Stage.WAITING_FOR_CLICK;
                     writeState("screen-open");
                     record("screen", "forge screen opened");
                     return;
                 }
-                // openMenu is a no-op while the player is still joining, so retry from the
-                // server thread until the screen appears instead of once at the ready moment.
+                // The client opens a menu by looking the block entity up at the position
+                // the server sends. Until the chunk carrying the table has reached the
+                // client that lookup fails, and 1.21 responds by disconnecting, so wait
+                // for the sync instead of racing it. Twenty ticks is generous for a
+                // chunk that is already loaded on the server.
+                if (minecraft.getSingleplayerServer() != null
+                        && minecraft.level != null
+                        && minecraft.level.getGameTime() - forgeBuiltAt < 20) {
+                    return;
+                }
                 var server = minecraft.getSingleplayerServer();
                 if (server != null && openMenuAttempt < 200) {
                     openMenuAttempt++;

@@ -23,7 +23,7 @@ external caller keep working.
 | `JDK matrix / <vendor>` | _jdkmatrix.yml | the sources compile with Oracle OpenJDK, Corretto, Zulu, Oracle JDK and Temurin |
 | `Build / <os>` | _build.yml | `-Xlint:all -Werror` and ErrorProne on main sources |
 | `Test / <os>` | _test.yml | unit tests, JaCoCo gate, GameTests, dedicated-server smoke |
-| `GUI / <os>` | _gui.yml | a real OS click reaches the forge screen and its button |
+| `GUI / <os>` | _gui.yml | a real OS click reaches the forge screen and its button (Linux, both Windows images) |
 | `Package / Jar` | _package.yml | jar contents, checksums, build provenance attestation |
 | `Package / Compare digests` | _package.yml | the jar is byte-identical on four operating systems |
 
@@ -100,9 +100,14 @@ Renderer availability is the platform risk:
 - Linux: Mesa llvmpipe under Xvfb, confirmed working.
 - Windows: the hosted image exposes only GDI generic OpenGL 1.1, so Mesa3D's
   llvmpipe `opengl32.dll` is installed from a pinned release.
-- macOS: synthetic `CGEvent`s need the Accessibility permission, which hosted
-  runners usually do not grant. The driver reports exit code 2 in that case so a
-  permission gap is never reported as a game failure.
+- macOS: **not run.** A hosted macOS runner has no GPU, and its WindowServer
+  rejects every OpenGL profile the client asks for:
+  `NSGL: Failed to find a suitable pixel format` from 4.6 down to 3.2. The client
+  never creates a window, so no input can reach it. This is a capability of the
+  runner, not something the mod can influence, so the matrix covers Linux and the
+  two Windows images and macOS is left to the manual checklist. The `CGEvent`
+  driver is kept in `tools/gui_driver/drive_macos.swift` for a machine that has a
+  real display.
 
 The harness records `GL_RENDERER` in its report, so a run that never had a real
 context cannot pass as if it did.
