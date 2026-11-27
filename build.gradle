@@ -122,6 +122,14 @@ neoForge {
             // Fresh, small, quiet window: the driver needs a deterministic layout.
             programArguments.addAll '--width', '1280', '--height', '800'
             jvmArgument '-Dfml.queryResult=confirm'
+            // A Windows runner has no GPU. When the workflow installed Mesa it exports
+            // INF_GUI_NATIVE_DIR, and that directory goes first on PATH: SafeDllSearchMode
+            // means the current directory is never searched, so an opengl32.dll dropped
+            // there would otherwise be invisible to GLFW's LoadLibrary call.
+            def nativeDir = System.getenv('INF_GUI_NATIVE_DIR')
+            if (nativeDir != null && !nativeDir.isEmpty()) {
+                environment 'PATH', "${nativeDir}${File.pathSeparator}${System.getenv('PATH') ?: ''}"
+            }
         }
 
         data {

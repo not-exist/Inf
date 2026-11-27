@@ -76,12 +76,27 @@ jobs:
           "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
           "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-          # SafeDllSearchMode is on by default on modern Windows, which means the
-          # current working directory is NOT searched: an opengl32.dll sitting in run/
-          # is invisible to the client. PATH is searched, so put the directory there.
+          # SafeDllSearchMode is on by default on modern Windows: the current working
+          # directory is NOT searched, and PATH is consulted only after the application
+          # directory. The application directory is first in the search order, so the
+          # DLLs also go next to java.exe. PATH is set as well, because the client may
+          # be launched through a wrapper.
           $nativeDir = (Resolve-Path 'run').Path
+          # Prefer the JDK this workflow installed: that is the java.exe Gradle uses.
+          $javaExe = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin/java.exe' } else { (Get-Command java.exe).Source }
+          if (-not (Test-Path $javaExe)) { throw "java.exe not found at $javaExe" }
+          $appDir = Split-Path -Parent $javaExe
+          Write-Host "client JDK: $javaExe"
+          Copy-Item (Join-Path $nativeDir '*.dll') $appDir -Force
+          if (-not (Test-Path (Join-Path $appDir 'opengl32.dll'))) {
+            throw "opengl32.dll was not copied next to java.exe in $appDir"
+          }
+          Write-Host "copied Mesa DLLs to $appDir (the application directory)"
+
           "$nativeDir" | Out-File -FilePath $env:GITHUB_PATH -Append
-          Write-Host "added $nativeDir to PATH for subsequent steps"
+          "$appDir" | Out-File -FilePath $env:GITHUB_PATH -Append
+          "INF_GUI_NATIVE_DIR=$nativeDir" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "added $nativeDir and $appDir to PATH; exported INF_GUI_NATIVE_DIR"
 
       - name: Install Linux input and window tools
         if: runner.os == 'Linux'
