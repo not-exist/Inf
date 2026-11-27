@@ -12,62 +12,16 @@ on:
 permissions:
   contents: read
 
+# Thin wrapper kept so release.yml and any external caller keep working while the
+# actual implementation lives in _package.yml (the underscore marks it private).
+# The callee attests provenance, so the calling job has to be allowed to as well;
+# a reusable workflow can never hold more permission than its caller.
 jobs:
-  jar:
-    name: Jar
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/gradle-setup
-        with:
-          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
-      - name: Assemble
-        run: ./gradlew --no-daemon --stacktrace --console=plain assemble
-      - name: Verify jar contents
-        shell: bash
-        run: |
-          set -euo pipefail
-          JAR=$(ls build/libs/inf-*.jar)
-          test -n "$JAR"
-          echo "Jar: $JAR"
-
-          jar tf "$JAR" | grep -qx 'META-INF/neoforge.mods.toml'
-          test "$(jar tf "$JAR" | grep -c '^data/inf/advancement/.*\.json$')" -eq 19
-          jar tf "$JAR" | grep -qx 'assets/inf/lang/en_us.json'
-          jar tf "$JAR" | grep -qx 'assets/inf/lang/zh_cn.json'
-
-          if jar tf "$JAR" | grep -q '^com/inf/gametest/'; then
-            echo "gametest classes leaked into the release jar"
-            exit 1
-          fi
-          if jar tf "$JAR" | grep -q '\.bbmodel$'; then
-            echo "BlockBench sources leaked into the release jar"
-            exit 1
-          fi
-
-          SIZE=$(stat -c%s "$JAR")
-          SHA=$(sha256sum "$JAR" | cut -d' ' -f1)
-          {
-            echo "## Package"
-            echo
-            echo "| Field | Value |"
-            echo "|---|---|"
-            echo "| Jar | $(basename "$JAR") |"
-            echo "| Size | $SIZE bytes |"
-            echo "| SHA-256 | \`$SHA\` |"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Checksums
-        run: cd build/libs && sha256sum inf-*.jar > SHA256SUMS.txt
-      - name: Upload jar
-        if: inputs.upload_artifacts
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
-        with:
-          name: inf-${{ github.sha }}
-          path: |
-            build/libs/inf-*.jar
-            build/libs/SHA256SUMS.txt
-          if-no-files-found: error
-          retention-days: 14
+  package:
+    uses: ./.github/workflows/_package.yml
+    with:
+      upload_artifacts: ${{ inputs.upload_artifacts }}
+    permissions:
+      contents: read
+      id-token: write # forward the OIDC token the callee needs for attestation
+      attestations: write # forward attestation write so the callee can publish it

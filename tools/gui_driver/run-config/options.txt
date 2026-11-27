@@ -1,0 +1,15 @@
+version:3955
+graphicsMode:0
+guiScale:1
+overrideWidth:1280
+overrideHeight:800
+fullscreen:false
+pauseOnLostFocus:false
+renderDistance:2
+simulationDistance:2
+narrator:0
+lang:en_us
+maxFps:60
+ao:false
+biomeBlendRadius:0
+entityDistanceScaling:0.5

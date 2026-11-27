@@ -1,0 +1,51 @@
+name: Package
+
+on:
+  workflow_call:
+    inputs:
+      upload_artifacts:
+        description: Upload the built jar as a workflow artifact.
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  jar:
+    name: Jar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token that backs the provenance attestation
+      attestations: write # publish the attestation
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      - name: Assemble and verify the jar
+        run: ./gradlew --no-daemon --stacktrace --console=plain jar verifyJar checksums
+
+      - name: Attest the build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
+        with:
+          subject-path: build/libs/inf-*.jar
+
+      - name: Upload jar
+        if: inputs.upload_artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: inf-${{ github.sha }}
+          path: |
+            build/libs/inf-*.jar
+            build/libs/SHA256SUMS.txt
+            build/reports/jar-verification/jar.txt
+          if-no-files-found: error
+          retention-days: 14

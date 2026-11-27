@@ -1,7 +1,11 @@
 # Test & CI Design Plan — Inf
 
-Status: implemented in this branch (Phases 1–4). Phase 5 remains optional.
-Baseline: `main` at `4d2914f` (v0.2.0), verified 2026-11-25.
+Status: implemented and merged; `docs/ci.md` describes the pipeline as it now runs.
+Baseline: `main` at `fe03daa` (v0.2.0), verified 2026-11-26.
+
+The layers below are unchanged. The CI section is superseded by `docs/ci.md`,
+which adds the multi-OS matrix, the JDK vendor matrix, the compiler and ErrorProne
+gates, reproducible packaging and the real-input client test.
 Scope: test architecture for the forge loop, plus the GitHub Actions CI that runs it.
 
 ## 1. Summary of the proposal
@@ -27,7 +31,7 @@ workflow, warm in roughly 8–12 minutes, cold in roughly 20–30 minutes.
 | Item | State |
 |---|---|
 | `./gradlew test` | Passes; full rerun 5 s warm. |
-| Tests | 40 tests in 11 classes on main; this branch raises the suite to 104 JUnit methods plus 17 GameTests. |
+| Tests | 104 JUnit methods in 20 classes, plus 17 GameTests. |
 | `runGameTestServer` task | Exists (ModDevGradle run `gameTestServer`, namespace `inf`), but zero GameTests. A GameTest server with no tests fails by design. |
 | `.github/` | Does not exist. No CI at all. |
 | JDK | Project toolchain is 21; the machine's default `java` is 17 and Gradle provisions 21 (~/.gradle/jdks). |
@@ -318,7 +322,7 @@ ci.yml · push main · pull_request main · workflow_dispatch
 │  ├─ always: summarize build/test-results/test/*.xml → $GITHUB_STEP_SUMMARY
 │  └─ always: upload build/test-results/test + build/reports/tests/test
 │
-├─ gametest (35 min)                needs: quality        [enable in Phase 3]
+├─ gametest (35 min)                needs: quality
 │  ├─ checkout
 │  ├─ ./.github/actions/gradle-setup
 │  ├─ mkdir -p run && printf 'eula=true\n' > run/eula.txt
@@ -461,7 +465,7 @@ option for fork PRs, which cannot write caches).
 - Upload `run/logs` and `run/crash-reports` on failure only: logs are multi-MB and
   are only useful when something went wrong. `if-no-files-found: ignore` keeps a
   missing directory from masking the real failure.
-- `timeout-minutes: 35` covers a cold decompile, server bootstrap and 16 tests;
+- `timeout-minutes: 35` covers a cold decompile, server bootstrap and 17 tests;
   each test also carries its own `timeoutTicks` (200) so a hung test fails itself.
 - Enable this job only after the first GameTest exists: an empty GameTestServer
   run fails by design.
@@ -640,8 +644,9 @@ Acceptance criteria for the workflow itself (verify on the first PRs):
 
 - **Phase 1 — CI skeleton.** Done: `ci.yml` (validate/quality/unit-test/package),
   reusable `package.yml`, composite `gradle-setup`.
-- **Phase 2 — unit expansion.** Done: 104 JUnit methods across 21 test classes,
-  the §4.1–4.4 refactors, JaCoCo report and an 80% line rule on the pure packages.
+- **Phase 2 — unit expansion.** Done: 104 JUnit methods across 20 test classes,
+  the §4.1–4.4 refactors, a JaCoCo report and a 50% line rule on the pure
+  packages, to be ratcheted upward.
   Spotless/`palantir-java-format` is deliberately deferred; it is a standalone
   formatting change, not a behaviour change.
 - **Phase 3 — GameTests.** Done: `gametest` source set, generated platform NBT,
@@ -664,7 +669,7 @@ Acceptance criteria for the workflow itself (verify on the first PRs):
 | Coverage gate churn while packages move | rules are scoped to a named package list; update the list with the refactors |
 | 19 advancement files and code drift | advancement constants + `ResourceLintTest` + G15 |
 
-## Appendix A — draft workflows (not committed)
+## Appendix A — workflow drafts (committed; see docs/ci.md for the current shape)
 
 All action SHAs were resolved on 2026-11-25; the `# vX.Y.Z` comments are for
 reviewers. If an action is bumped, change the SHA and the comment together.

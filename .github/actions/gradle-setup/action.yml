@@ -1,24 +1,59 @@
 name: Gradle setup
-description: JDK 21, Gradle caches and NeoForm artifacts for the Inf build.
+description: JDK, Gradle caches and NeoForm artifacts for the Inf build.
 
 inputs:
   neoform-cache-key:
     description: Cache key for the NeoForm artifacts.
     required: true
+  distribution:
+    description: JDK distribution to install (a keyword from actions/setup-java).
+    required: false
+    default: temurin
+  java-version:
+    description: JDK feature version.
+    required: false
+    default: '21'
+  pin-toolchain:
+    description: Restrict Gradle toolchain discovery to the JDK installed here.
+    required: false
+    default: 'true'
+
+outputs:
+  java-home:
+    description: JAVA_HOME of the installed JDK.
+    value: ${{ steps.java.outputs.path }}
 
 runs:
   using: composite
   steps:
-    - name: Set up JDK 21
+    - name: Set up JDK ${{ inputs.java-version }} (${{ inputs.distribution }})
       uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880  # v6.3.0
       with:
-        distribution: temurin
-        java-version: '21'
+        distribution: ${{ inputs.distribution }}
+        java-version: ${{ inputs.java-version }}
+        cache-jdk: true
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c  # v6.4.1
       with:
         cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+    # Written as Gradle properties rather than GRADLE_OPTS: environment variables
+    # are read by the launcher only, while the toolchain registry is configured
+    # inside the daemon. Getting this wrong lets foojay download a Temurin JDK and
+    # every vendor job would silently compile with Temurin.
+    - name: Pin the Gradle toolchain to the installed JDK
+      if: inputs.pin-toolchain == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        PROPS="${GRADLE_USER_HOME:-$HOME/.gradle}/gradle.properties"
+        mkdir -p "$(dirname "$PROPS")"
+        {
+          echo "org.gradle.java.installations.auto-detect=false"
+          echo "org.gradle.java.installations.auto-download=false"
+          echo "org.gradle.java.installations.paths=${JAVA_HOME}"
+        } >> "$PROPS"
 
     - name: Cache NeoForm artifacts
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0

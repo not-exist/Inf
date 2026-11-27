@@ -47,7 +47,12 @@ public final class ForgeViewModel {
         data[VALUE] = value;
         data[STRIKES] = strikes;
         data[RISK_PERMILLE] = permille(rates.breakChance());
-        data[TIER] = WeaponTier.forValue(value).ordinal();
+        // The ContainerData contract is positional: the client reconstructs the tier
+        // from this index with WeaponTier.values()[...]. Ordinal is the wire format here,
+        // not an incidental index, and WeaponTierTest pins the order.
+        @SuppressWarnings("EnumOrdinal")
+        int tierOrdinal = WeaponTier.forValue(value).ordinal();
+        data[TIER] = tierOrdinal;
         data[FRENZY_READY] = frenzyReady ? 1 : 0;
         data[GAIN_MIN] = blade == null ? 0 : ForgeMath.valueGain(strikes, 0, balance);
         data[GAIN_MAX] = blade == null ? 0 : ForgeMath.valueGain(strikes, 99, balance);

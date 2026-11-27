@@ -4,7 +4,24 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Minor and patch bumps arrive as one PR so the matrix runs once, not five
+    # times; majors stay separate because they need a human decision.
+    groups:
+      gradle-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    # A brand-new release has not been exercised by anyone else yet. PR #4
+    # (gson 2.10.1 -> 2.15.0) failed to compile the same day it was published.
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    cooldown:
+      default-days: 7

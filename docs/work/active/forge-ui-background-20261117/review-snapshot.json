@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "mode": "worktree",
+  "project_root": "/home/ext/Inf",
+  "base_ref": "HEAD",
+  "head_ref": null,
+  "base": "f3aa982c720b36118b090466acd7fb74c367da2d",
+  "head": "f3aa982c720b36118b090466acd7fb74c367da2d",
+  "excludes": [
+    "docs/work"
+  ],
+  "files": [
+    {
+      "path": "src/main/java/com/inf/client/ForgeScreen.java",
+      "sha256": "ba0d9a53a366ce2cbc769885a2257f71cf70065881362aa354cedc659e830128"
+    },
+    {
+      "path": "src/main/resources/assets/inf/textures/gui/forge_table.png",
+      "sha256": "b1830f80a1a28c66a9580991b223bc733bf4bcd48abf561dd8c5ce20d49c3e9e"
+    },
+    {
+      "path": "tools/gen_assets.py",
+      "sha256": "aa09500e7563936bc6f02fe7fd1ac3d2311362c65519cb5668151de663d0e967"
+    }
+  ],
+  "snapshot_id": "sha256:95f2d8a22a4507acb084aebaf0fbd617bda93b74d4b68894705f7209e2c279e2"
+}

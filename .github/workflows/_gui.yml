@@ -1,0 +1,149 @@
+name: GUI
+
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: quick limits the matrix to Linux.
+        required: false
+        type: string
+        default: full
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS is absent on purpose: a hosted macOS runner has no GPU and its
+        # WindowServer offers no OpenGL pixel format at all, so the client cannot create
+        # a window ("NSGL: Failed to find a suitable pixel format" on every profile down
+        # to 3.2). Nothing about the mod can change that, and a permanently red required
+        # check would only teach people to ignore it.
+        os: ${{ fromJSON(inputs.scope == 'quick' && '["ubuntu-24.04"]' || '["ubuntu-24.04","windows-2022","windows-2025"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/gradle-setup
+        with:
+          neoform-cache-key: neoform-${{ runner.os }}-${{ hashFiles('gradle.properties') }}
+
+      # Hosted Windows and macOS runners have no GPU: Windows exposes only the GDI
+      # generic OpenGL 1.1 renderer, while Minecraft needs 3.2 core. Mesa's llvmpipe
+      # provides a software 3.2+ context. The version and checksum are pinned so a
+      # silent upstream change cannot alter test results.
+      - name: Install Mesa software renderer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Pinned by release tag. 7-Zip is preinstalled on the Windows images.
+          $version = '25.0.3'
+          $archive = Join-Path $env:RUNNER_TEMP 'mesa.7z'
+          Invoke-WebRequest -Uri "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z" -OutFile $archive
+
+          $extract = Join-Path $env:RUNNER_TEMP 'mesa'
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          & 7z x $archive "-o$extract" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+
+          $source = Join-Path $extract 'x64'
+          if (-not (Test-Path $source)) {
+            Write-Host 'Extracted tree:'
+            Get-ChildItem $extract -Recurse -Depth 1 | Select-Object -First 40 FullName
+            throw "Mesa archive did not contain an x64 directory at $source"
+          }
+          Write-Host 'x64 contents:'
+          Get-ChildItem $source | Select-Object Name, Length | Format-Table
+
+          # Windows resolves a DLL next to the process image and on PATH, never in an
+          # arbitrary directory, so these must live in run/, the client's working
+          # directory. Copy every DLL the archive ships rather than a guessed subset.
+          New-Item -ItemType Directory -Force -Path run | Out-Null
+          Copy-Item (Join-Path $source '*.dll') run -Force
+          if (-not (Test-Path 'run/opengl32.dll')) {
+            throw 'run/opengl32.dll was not copied; the client will have no OpenGL'
+          }
+          Get-ChildItem run/*.dll | Select-Object Name, Length | Format-Table
+
+          "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          # SafeDllSearchMode is on by default on modern Windows: the current working
+          # directory is NOT searched, and PATH is consulted only after the application
+          # directory. The application directory is first in the search order, so the
+          # DLLs also go next to java.exe. PATH is set as well, because the client may
+          # be launched through a wrapper.
+          $nativeDir = (Resolve-Path 'run').Path
+          # Prefer the JDK this workflow installed: that is the java.exe Gradle uses.
+          $javaExe = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin/java.exe' } else { (Get-Command java.exe).Source }
+          if (-not (Test-Path $javaExe)) { throw "java.exe not found at $javaExe" }
+          $appDir = Split-Path -Parent $javaExe
+          Write-Host "client JDK: $javaExe"
+          Copy-Item (Join-Path $nativeDir '*.dll') $appDir -Force
+          if (-not (Test-Path (Join-Path $appDir 'opengl32.dll'))) {
+            throw "opengl32.dll was not copied next to java.exe in $appDir"
+          }
+          Write-Host "copied Mesa DLLs to $appDir (the application directory)"
+
+          "$nativeDir" | Out-File -FilePath $env:GITHUB_PATH -Append
+          "$appDir" | Out-File -FilePath $env:GITHUB_PATH -Append
+          "INF_GUI_NATIVE_DIR=$nativeDir" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "added $nativeDir and $appDir to PATH; exported INF_GUI_NATIVE_DIR"
+
+      - name: Install Linux input and window tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openbox
+
+      - name: Prepare the deterministic run directory
+        run: |
+          ./gradlew --no-daemon --console=plain prepareRunDir prepareClientTest
+
+      # The client and the driver must run in the same session: the driver injects
+      # OS events into the display the client owns.
+      - name: Run the client with real input (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash tools/gui_driver/run_linux.sh
+
+      - name: Run the client with real input (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $client = Start-Process -FilePath ".\gradlew.bat" -ArgumentList "--no-daemon","--console=plain","runClientTest" -PassThru -RedirectStandardOutput client.log -RedirectStandardError client.err
+          $code = 1
+          try {
+            python tools/gui_driver/driver.py --os windows
+            $code = $LASTEXITCODE
+          } finally {
+            Stop-Process -Id $client.Id -Force -ErrorAction SilentlyContinue
+            if ($code -ne 0) {
+              Write-Host '=== driver exit' $code '==='
+              if (Test-Path run/clienttest) { Get-ChildItem run/clienttest | Format-Table Name, Length }
+              if (Test-Path client.log) { Get-Content client.log -Tail 60 }
+              if (Test-Path client.err) { Get-Content client.err -Tail 40 }
+            }
+          }
+          exit $code
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: gui-${{ matrix.os }}
+          path: |
+            run/clienttest
+            run/screenshots
+            run/logs
+            run/crash-reports
+            client.log
+            client.err
+          if-no-files-found: ignore
+          retention-days: 7
