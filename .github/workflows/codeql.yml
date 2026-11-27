@@ -18,12 +18,16 @@ permissions:
 
 jobs:
   analyze:
+    name: Analyze ${{ matrix.language }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # CodeQL reads the workflow run that produced the artifacts and uploads SARIF to code
+    # scanning; nothing here writes to the repository.
     permissions:
       contents: read
-      actions: read
-      security-events: write
+      actions: read # read the run's own artifacts for extraction
+      security-events: write # upload the SARIF result to code scanning
+
     strategy:
       fail-fast: false
       matrix:

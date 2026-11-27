@@ -9,16 +9,21 @@ on:
         type: boolean
         default: true
 
+# Only the jar job attests provenance. Declaring OIDC and attestation access at the
+# workflow level would also hand them to the reproducible matrix, which runs a full
+# Gradle build on an untrusted checkout for no reason.
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 jobs:
   jar:
     name: Jar
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token that backs the provenance attestation
+      attestations: write # publish the attestation
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

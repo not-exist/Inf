@@ -77,8 +77,11 @@ jobs:
     needs: [test, gui]
     # _package.yml attests build provenance, and a called workflow can never hold
     # more permission than its caller: without these the whole run fails at startup.
+    # The package job attests provenance, which needs an OIDC token and attestation
+    # write; every other job in this workflow stays read-only.
     permissions:
       contents: read
-      id-token: write
-      attestations: write
+      id-token: write # mint the OIDC token for build provenance
+      attestations: write # publish the provenance attestation
+
     uses: ./.github/workflows/_package.yml

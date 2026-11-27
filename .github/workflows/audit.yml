@@ -12,14 +12,22 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   dependency-review:
+    name: Dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # dependency-review posts its verdict as a PR comment, which needs write access to
+    # the pull request; contents stays read-only.
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: write # comment the review result on the pull request
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

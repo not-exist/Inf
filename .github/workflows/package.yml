@@ -11,11 +11,11 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 # Thin wrapper kept so release.yml and any external caller keep working while the
 # actual implementation lives in _package.yml (the underscore marks it private).
+# The callee attests provenance, so the calling job has to be allowed to as well;
+# a reusable workflow can never hold more permission than its caller.
 jobs:
   package:
     uses: ./.github/workflows/_package.yml
@@ -23,5 +23,5 @@ jobs:
       upload_artifacts: ${{ inputs.upload_artifacts }}
     permissions:
       contents: read
-      id-token: write
-      attestations: write
+      id-token: write # forward the OIDC token the callee needs for attestation
+      attestations: write # forward attestation write so the callee can publish it
