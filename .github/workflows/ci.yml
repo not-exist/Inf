@@ -37,6 +37,11 @@ jobs:
   lint:
     name: Lint
     needs: validate
+    # _lint.yml's Workflows job uploads zizmor's SARIF to code scanning; a called
+    # workflow can never exceed its caller, so the scope has to be granted here too.
+    permissions:
+      contents: read
+      security-events: write # upload zizmor's SARIF report to code scanning
     uses: ./.github/workflows/_lint.yml
 
   format:
