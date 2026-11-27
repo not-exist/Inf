@@ -131,7 +131,9 @@ def run_linux(scenario: str) -> int:
 
     # The harness advances on its own from creating-world to screen-open; a late-attaching
     # driver must not insist on observing the intermediate 'ready' state.
-    if not wait_for(lambda: read_state().get("state") in ("ready", "screen-open"), 180, "the harness to start"):
+    # A cold run downloads assets and decompiles Minecraft first; the harness only
+    # starts writing state once the client reaches the title screen.
+    if not wait_for(lambda: read_state().get("state") in ("ready", "screen-open"), 420, "the harness to start"):
         return 1
     if not wait_for(lambda: read_state().get("state") == "screen-open", 180, "the forge screen to open"):
         log("the screen never opened; see run/clienttest/events.log")

@@ -24,11 +24,14 @@ Xvfb ":$DISPLAY_NUM" -screen 0 "$SCREEN" > xvfb.log 2>&1 &
 XVFB_PID=$!
 export DISPLAY=":$DISPLAY_NUM"
 
-for _ in $(seq 1 20); do
-    if xdpyinfo > /dev/null 2>&1; then break; fi
+# Probe the socket rather than xdpyinfo: x11-utils is not installed on the runner
+# image, so a missing binary used to look like a broken X server.
+ready=0
+for _ in $(seq 1 40); do
+    if [ -S "/tmp/.X11-unix/X$DISPLAY_NUM" ]; then ready=1; break; fi
     sleep 0.5
 done
-if ! xdpyinfo > /dev/null 2>&1; then
+if [ "$ready" -ne 1 ]; then
     echo "Xvfb did not come up on $DISPLAY"
     cat xvfb.log || true
     exit 2

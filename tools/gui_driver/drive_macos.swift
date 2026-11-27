@@ -15,8 +15,9 @@ func fail(_ message: String, _ code: Int32) -> Never {
 }
 
 let args = CommandLine.arguments
-guard args.count >= 10 else {
-    fail("usage: driver width height clickX clickY forgeX forgeY statePath reportPath", 2)
+// argv[0] is the executable, so nine entries means all eight arguments are present.
+guard args.count >= 9 else {
+    fail("usage: driver width height clickX clickY forgeX forgeY statePath reportPath (got \(args.count - 1))", 2)
 }
 let width = Int(args[1]) ?? 1280
 let height = Int(args[2]) ?? 800

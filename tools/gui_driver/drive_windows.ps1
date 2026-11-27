@@ -73,7 +73,9 @@ function Wait-State([string]$wanted, [int]$timeoutSeconds) {
 }
 
 $hwnd = [IntPtr]::Zero
-$deadline = (Get-Date).AddSeconds(60)
+# A cold run downloads assets and decompiles Minecraft before the window appears;
+# 60 s was not enough on a fresh runner.
+$deadline = (Get-Date).AddSeconds(420)
 while ((Get-Date) -lt $deadline -and $hwnd -eq [IntPtr]::Zero) {
     $hwnd = Find-MinecraftWindow
     if ($hwnd -eq [IntPtr]::Zero) { Start-Sleep -Seconds 1 }
