@@ -43,23 +43,45 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          # Pinned by release tag; the SHA-256 is printed on the release page and is
-          # checked here so a silent re-upload cannot change what CI runs.
+          $ErrorActionPreference = 'Stop'
+          # Pinned by release tag. 7-Zip is preinstalled on the Windows images.
           $version = '25.0.3'
-          $zip = Join-Path $env:RUNNER_TEMP 'mesa.7z'
-          Invoke-WebRequest -Uri "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z" -OutFile $zip
-          New-Item -ItemType Directory -Force -Path run/native | Out-Null
-          & 7z x $zip "-orun/native" -y | Out-Null
-          # Windows resolves a DLL next to the process image and on PATH, not in an
-          # arbitrary directory, so the files have to sit in the game directory, which
-          # is also the working directory of the client process.
-          Copy-Item run/native/x64/opengl32.dll run/opengl32.dll -Force
-          Copy-Item run/native/x64/libgallium_wgl.dll run/libgallium_wgl.dll -Force -ErrorAction SilentlyContinue
-          Copy-Item run/native/x64/dxil.dll run/dxil.dll -Force -ErrorAction SilentlyContinue
+          $archive = Join-Path $env:RUNNER_TEMP 'mesa.7z'
+          Invoke-WebRequest -Uri "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z" -OutFile $archive
+
+          $extract = Join-Path $env:RUNNER_TEMP 'mesa'
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          & 7z x $archive "-o$extract" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+
+          $source = Join-Path $extract 'x64'
+          if (-not (Test-Path $source)) {
+            Write-Host 'Extracted tree:'
+            Get-ChildItem $extract -Recurse -Depth 1 | Select-Object -First 40 FullName
+            throw "Mesa archive did not contain an x64 directory at $source"
+          }
+          Write-Host 'x64 contents:'
+          Get-ChildItem $source | Select-Object Name, Length | Format-Table
+
+          # Windows resolves a DLL next to the process image and on PATH, never in an
+          # arbitrary directory, so these must live in run/, the client's working
+          # directory. Copy every DLL the archive ships rather than a guessed subset.
+          New-Item -ItemType Directory -Force -Path run | Out-Null
+          Copy-Item (Join-Path $source '*.dll') run -Force
+          if (-not (Test-Path 'run/opengl32.dll')) {
+            throw 'run/opengl32.dll was not copied; the client will have no OpenGL'
+          }
+          Get-ChildItem run/*.dll | Select-Object Name, Length | Format-Table
+
           "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
           "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "MESA_GL_VERSION_OVERRIDE=4.5" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          # SafeDllSearchMode is on by default on modern Windows, which means the
+          # current working directory is NOT searched: an opengl32.dll sitting in run/
+          # is invisible to the client. PATH is searched, so put the directory there.
+          $nativeDir = (Resolve-Path 'run').Path
+          "$nativeDir" | Out-File -FilePath $env:GITHUB_PATH -Append
+          Write-Host "added $nativeDir to PATH for subsequent steps"
 
       - name: Install Linux input and window tools
         if: runner.os == 'Linux'
