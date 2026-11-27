@@ -11,6 +11,13 @@ jobs:
     name: Workflows
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    # zizmor-action uploads a SARIF report to code scanning. On a pull request the
+    # destination is refs/pull/N/merge and a read-only token is enough, but a push to
+    # a branch has to create the analysis on refs/heads/main, which needs write access
+    # here and in the caller (ci.yml); a called workflow can never exceed its caller.
+    permissions:
+      contents: read
+      security-events: write # upload the zizmor SARIF report to code scanning
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
