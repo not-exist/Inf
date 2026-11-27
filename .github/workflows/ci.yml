@@ -72,16 +72,21 @@ jobs:
     with:
       scope: ${{ github.event.inputs.scope || 'full' }}
 
+  # A single check that says "the pipeline is green". Everything it depends on has
+  # already reported individually; this exists so branch protection needs one entry
+  # instead of one per platform per stage.
+  gate:
+    name: Gate
+    needs: [test, gui]
+    uses: ./.github/workflows/_gate.yml
+
   package:
     name: Package
-    needs: [test, gui]
-    # _package.yml attests build provenance, and a called workflow can never hold
-    # more permission than its caller: without these the whole run fails at startup.
-    # The package job attests provenance, which needs an OIDC token and attestation
-    # write; every other job in this workflow stays read-only.
+    needs: gate
+    # _package.yml attests build provenance, and a called workflow can never hold more
+    # permission than its caller: without these the whole run fails at startup.
     permissions:
       contents: read
       id-token: write # mint the OIDC token for build provenance
       attestations: write # publish the provenance attestation
-
     uses: ./.github/workflows/_package.yml

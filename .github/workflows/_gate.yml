@@ -1,0 +1,33 @@
+name: Gate
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# A single required check that summarises whether the whole pipeline is green.
+#
+# Every job above it already reports its own result, but a fan-in of four operating
+# systems times three stages leaves a dozen check names to keep in sync with branch
+# protection, and adding a platform means editing that list again. Branch protection
+# only has to require this one job.
+#
+# The job deliberately does no work of its own: on a reusable workflow the caller's
+# `needs:` is the dependency, so Gate is only ever reached when Test and GUI have
+# already succeeded.
+jobs:
+  summary:
+    name: Summary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Report the pipeline result
+        shell: bash
+        run: |
+          {
+            echo "## Pipeline gate"
+            echo
+            echo "Test and GUI succeeded on every platform in the matrix."
+            echo "See the Test and GUI jobs for the per-platform detail."
+          } >> "$GITHUB_STEP_SUMMARY"

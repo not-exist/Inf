@@ -507,9 +507,10 @@ tasks.register('verifyServerLog') {
     }
 }
 
-// Reproducible archives: identical bytes for identical inputs, on every OS. The
-// multi-OS matrix compares the SHA-256 of all four jars, so anything that leaks a
-// timestamp, a locale or a filesystem ordering into the archive fails the build.
+// Reproducible archives: identical bytes for identical inputs, on every OS. Nothing in
+// CI compares digests across platforms any more, but a timestamp or a filesystem
+// ordering leaking into the jar still makes a rebuild differ from the release for no
+// reason, and it costs nothing to keep the property that prevents it.
 tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
     reproducibleFileOrder = true

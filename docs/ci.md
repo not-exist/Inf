@@ -8,9 +8,13 @@ branch protection should require; keep them stable.
 ```
 validate ──┬── lint ─────┐
            ├── format ───┤
-           └── jdk[5] ───┴── build[4 OS] ── gui[4 OS] ──┐
-                       └── test[4 OS] ──────────────────┴── package
+           └── jdk[5] ───┴── build[4 OS] ── gui[3 OS] ──┐
+                       └── test[4 OS] ────────────────┴── gate ── package
 ```
+
+`gate` is a fan-in with no work of its own: it exists so branch protection has one
+required check instead of one per platform per stage. `package` depends on it, so a
+jar is only built for a commit whose tests and GUI runs all passed.
 
 `package.yml` is a thin wrapper around `_package.yml` so `release.yml` and any
 external caller keep working.
@@ -24,8 +28,8 @@ external caller keep working.
 | `Build / <os>` | _build.yml | `-Xlint:all -Werror` and ErrorProne on main sources |
 | `Test / <os>` | _test.yml | unit tests, JaCoCo gate, GameTests, dedicated-server smoke |
 | `GUI / <os>` | _gui.yml | a real OS click reaches the forge screen and its button (Linux, both Windows images) |
+| `Gate` | _gate.yml | fan-in over Test and GUI; the single check to require |
 | `Package / Jar` | _package.yml | jar contents, checksums, build provenance attestation |
-| `Package / Compare digests` | _package.yml | the jar is byte-identical on four operating systems |
 
 ## Why the matrix looks like this
 
