@@ -15,8 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 public final class WeaponAttributeApplier {
-    private WeaponAttributeApplier() {
-    }
+    private WeaponAttributeApplier() {}
 
     public static void apply(ItemStack stack, WeaponKind kind, WeaponTier tier) {
         WeaponStats stats = WeaponStatsTable.forTier(kind, tier);
@@ -32,8 +31,7 @@ public final class WeaponAttributeApplier {
                 add(builder, Attributes.ENTITY_INTERACTION_RANGE, kind, "reach", stats.reachModifier());
             }
             case DAGGER -> add(builder, Attributes.ENTITY_INTERACTION_RANGE, kind, "reach", stats.reachModifier());
-            case PICKAXE, AXE -> {
-            }
+            case PICKAXE, AXE -> {}
         }
 
         stack.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());

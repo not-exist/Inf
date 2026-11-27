@@ -41,9 +41,7 @@ class ForgeMathTest {
     void rates_sumToOne() {
         ForgeRates rates = ForgeRates.of(420, 18, false, B);
         assertEquals(
-                1.0,
-                rates.breakChance() + rates.damageChance() + rates.successChance() + rates.greatChance(),
-                1e-9);
+                1.0, rates.breakChance() + rates.damageChance() + rates.successChance() + rates.greatChance(), 1e-9);
     }
 
     @Test
@@ -56,7 +54,8 @@ class ForgeMathTest {
 
     @Test
     void strike_breaksWhenRollIsBelowChance() {
-        assertEquals(ForgeOutcome.BREAK, ForgeMath.strike(0, 0, 0.0, 50, false, B).outcome());
+        assertEquals(
+                ForgeOutcome.BREAK, ForgeMath.strike(0, 0, 0.0, 50, false, B).outcome());
     }
 
     @Test

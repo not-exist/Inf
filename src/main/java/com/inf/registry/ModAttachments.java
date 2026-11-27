@@ -18,6 +18,5 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .build());
 
-    private ModAttachments() {
-    }
+    private ModAttachments() {}
 }

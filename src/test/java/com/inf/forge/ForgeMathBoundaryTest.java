@@ -12,26 +12,34 @@ class ForgeMathBoundaryTest {
     @Test
     void rollExactlyAtBreakChance_isDamage() {
         ForgeRates rates = ForgeRates.of(100, 10, false, B);
-        assertEquals(ForgeOutcome.DAMAGE, ForgeMath.strike(100, 10, rates.breakChance(), 50, false, B).outcome());
+        assertEquals(
+                ForgeOutcome.DAMAGE,
+                ForgeMath.strike(100, 10, rates.breakChance(), 50, false, B).outcome());
     }
 
     @Test
     void rollExactlyAtDamageEdge_isGreatSuccess() {
         ForgeRates rates = ForgeRates.of(100, 10, false, B);
         double edge = rates.breakChance() + rates.damageChance();
-        assertEquals(ForgeOutcome.GREAT_SUCCESS, ForgeMath.strike(100, 10, edge, 50, false, B).outcome());
+        assertEquals(
+                ForgeOutcome.GREAT_SUCCESS,
+                ForgeMath.strike(100, 10, edge, 50, false, B).outcome());
     }
 
     @Test
     void rollExactlyAtGreatEdge_isSuccess() {
         ForgeRates rates = ForgeRates.of(100, 10, false, B);
         double edge = rates.breakChance() + rates.damageChance() + rates.greatChance();
-        assertEquals(ForgeOutcome.SUCCESS, ForgeMath.strike(100, 10, edge, 50, false, B).outcome());
+        assertEquals(
+                ForgeOutcome.SUCCESS,
+                ForgeMath.strike(100, 10, edge, 50, false, B).outcome());
     }
 
     @Test
     void rollOne_isAlwaysSuccess() {
-        assertEquals(ForgeOutcome.SUCCESS, ForgeMath.strike(1000, 100, 1.0, 50, false, B).outcome());
+        assertEquals(
+                ForgeOutcome.SUCCESS,
+                ForgeMath.strike(1000, 100, 1.0, 50, false, B).outcome());
     }
 
     @Test

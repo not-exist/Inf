@@ -33,6 +33,5 @@ public final class ModCreativeTabs {
                     })
                     .build());
 
-    private ModCreativeTabs() {
-    }
+    private ModCreativeTabs() {}
 }

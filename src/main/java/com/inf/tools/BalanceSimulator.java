@@ -10,8 +10,7 @@ public final class BalanceSimulator {
     private static final int LEGENDARY_VALUE = 1000;
     private static final int MAX_STRIKES = 10_000;
 
-    private BalanceSimulator() {
-    }
+    private BalanceSimulator() {}
 
     public static BalanceReport run(int trials, long seed, ForgeBalance balance) {
         if (trials <= 0) {

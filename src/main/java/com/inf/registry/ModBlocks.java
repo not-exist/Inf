@@ -22,6 +22,5 @@ public final class ModBlocks {
     public static final DeferredItem<BlockItem> FORGE_TABLE_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("forge_table", FORGE_TABLE);
 
-    private ModBlocks() {
-    }
+    private ModBlocks() {}
 }

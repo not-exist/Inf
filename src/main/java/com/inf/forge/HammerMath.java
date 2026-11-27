@@ -1,8 +1,7 @@
 package com.inf.forge;
 
 public final class HammerMath {
-    private HammerMath() {
-    }
+    private HammerMath() {}
 
     public static int remainingAfterStrikes(int maxDurability, int strikes) {
         return Math.max(0, maxDurability - strikes);

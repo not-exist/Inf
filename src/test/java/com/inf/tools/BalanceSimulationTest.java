@@ -33,8 +33,11 @@ class BalanceSimulationTest {
     void higherRiskLowersLegendaryRateAcrossSeeds() {
         ForgeBalance harsh = ForgeBalance.of(0.015, 0.0024, 0.00003, 0.85, 12, 1, 8, 4);
         for (long seed : new long[] {1L, 2L, 3L, 5L, 8L}) {
-            assertTrue(BalanceSimulator.run(5_000, seed, harsh).legendary()
-                    < BalanceSimulator.run(5_000, seed, ForgeBalance.DEFAULT).legendary(), "seed " + seed);
+            assertTrue(
+                    BalanceSimulator.run(5_000, seed, harsh).legendary()
+                            < BalanceSimulator.run(5_000, seed, ForgeBalance.DEFAULT)
+                                    .legendary(),
+                    "seed " + seed);
         }
     }
 

@@ -7,5 +7,4 @@ public record BalanceReport(
         double rareOrBetter,
         double epicOrBetter,
         double legendary,
-        double averageStrikes) {
-}
+        double averageStrikes) {}

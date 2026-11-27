@@ -9,7 +9,10 @@ import net.minecraft.network.codec.StreamCodec;
 
 public record BladeData(WeaponKind kind, int value, int strikes, long seed) {
     public static final Codec<BladeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.STRING.xmap(WeaponKind::byId, kind -> kind.id).fieldOf("kind").forGetter(BladeData::kind),
+                    Codec.STRING
+                            .xmap(WeaponKind::byId, kind -> kind.id)
+                            .fieldOf("kind")
+                            .forGetter(BladeData::kind),
                     Codec.INT.optionalFieldOf("value", 0).forGetter(BladeData::value),
                     Codec.INT.optionalFieldOf("strikes", 0).forGetter(BladeData::strikes),
                     Codec.LONG.optionalFieldOf("seed", 0L).forGetter(BladeData::seed))

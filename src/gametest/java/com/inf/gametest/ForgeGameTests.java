@@ -27,10 +27,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -40,8 +40,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ForgeGameTests {
     private static final BlockPos TABLE = new BlockPos(1, 1, 1);
 
-    private ForgeGameTests() {
-    }
+    private ForgeGameTests() {}
 
     @GameTest(template = "platform", timeoutTicks = 200)
     public static void strike_success_updatesBladeAndWearsHammer(GameTestHelper helper) {
@@ -63,7 +62,8 @@ public final class ForgeGameTests {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
         helper.assertTrue(ForgeService.strike(forge, player, 0.0, 50), "break strike should resolve");
-        helper.assertTrue(forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE).isEmpty(),
+        helper.assertTrue(
+                forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE).isEmpty(),
                 "broken blade should be removed");
         helper.assertTrue(hammer(forge).getDamageValue() == 1, "hammer should still wear");
         helper.assertTrue(forge.frenzyStrikesLeft() == 0, "break resets frenzy");
@@ -75,7 +75,8 @@ public final class ForgeGameTests {
         ForgeBlockEntity forge = placeForge(helper, ModItems.SWORD_BLANK.get(), 0);
         setBlade(forge, new BladeData(WeaponKind.SWORD, 100, 10, 0L));
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        double roll = com.inf.forge.ForgeRates.of(100, 10, false, com.inf.forge.ForgeBalance.DEFAULT).breakChance();
+        double roll = com.inf.forge.ForgeRates.of(100, 10, false, com.inf.forge.ForgeBalance.DEFAULT)
+                .breakChance();
 
         helper.assertTrue(ForgeService.strike(forge, player, roll, 50), "damage strike should resolve");
         BladeData data = bladeData(forge);
@@ -90,7 +91,8 @@ public final class ForgeGameTests {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
         helper.assertTrue(ForgeService.strike(forge, player, 0.999, 50), "last strike should resolve");
-        helper.assertTrue(forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_HAMMER).isEmpty(),
+        helper.assertTrue(
+                forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_HAMMER).isEmpty(),
                 "worn hammer should disappear");
         helper.succeed();
     }
@@ -153,7 +155,8 @@ public final class ForgeGameTests {
 
         helper.assertTrue(ForgeService.activateFrenzy(forge, player), "frenzy should activate");
         int granted = forge.frenzyStrikesLeft();
-        helper.assertTrue(granted == com.inf.InfConfig.frenzyFreeStrikes(),
+        helper.assertTrue(
+                granted == com.inf.InfConfig.frenzyFreeStrikes(),
                 "grant should match the configured free strikes, got " + granted);
         helper.assertTrue(granted > 0, "frenzy should grant at least one strike");
 
@@ -183,8 +186,8 @@ public final class ForgeGameTests {
     public static void menu_buttonDispatch_strike(GameTestHelper helper) {
         ForgeBlockEntity forge = placeForge(helper, ModItems.SWORD_BLANK.get(), 0);
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        ForgeMenu menu = new ForgeMenu(0, player.getInventory(), forge,
-                new ForgeData(forge, player, com.inf.forge.ForgeBalance.DEFAULT));
+        ForgeMenu menu = new ForgeMenu(
+                0, player.getInventory(), forge, new ForgeData(forge, player, com.inf.forge.ForgeBalance.DEFAULT));
 
         helper.assertTrue(menu.clickMenuButton(player, ForgeMenu.ACTION_STRIKE), "strike action");
         helper.assertTrue(bladeData(forge) != null && bladeData(forge).strikes() == 1, "menu strike lands");
@@ -196,18 +199,20 @@ public final class ForgeGameTests {
     public static void menu_quickMoveRoutesBlanksAndHammers(GameTestHelper helper) {
         ForgeBlockEntity forge = placeEmptyForge(helper);
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        ForgeMenu menu = new ForgeMenu(0, player.getInventory(), forge,
-                new ForgeData(forge, player, com.inf.forge.ForgeBalance.DEFAULT));
+        ForgeMenu menu = new ForgeMenu(
+                0, player.getInventory(), forge, new ForgeData(forge, player, com.inf.forge.ForgeBalance.DEFAULT));
 
         player.getInventory().setItem(9, new ItemStack(ModItems.SWORD_BLANK.get()));
         menu.quickMoveStack(player, 3);
-        helper.assertTrue(forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE).getItem()
-                == ModItems.SWORD_BLANK.get(), "blank should route to the blade slot");
+        helper.assertTrue(
+                forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE).getItem() == ModItems.SWORD_BLANK.get(),
+                "blank should route to the blade slot");
 
         player.getInventory().setItem(10, new ItemStack(ModItems.HAMMER.get()));
         menu.quickMoveStack(player, 4);
-        helper.assertTrue(forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_HAMMER).getItem()
-                == ModItems.HAMMER.get(), "hammer should route to the hammer slot");
+        helper.assertTrue(
+                forge.inventory().getStackInSlot(ForgeBlockEntity.SLOT_HAMMER).getItem() == ModItems.HAMMER.get(),
+                "hammer should route to the hammer slot");
         helper.succeed();
     }
 
@@ -220,12 +225,16 @@ public final class ForgeGameTests {
 
         CompoundTag tag = forge.saveWithFullMetadata(helper.getLevel().registryAccess());
         ForgeBlockEntity loaded = (ForgeBlockEntity) net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
-                forge.getBlockPos(), forge.getBlockState(), tag, helper.getLevel().registryAccess());
+                forge.getBlockPos(),
+                forge.getBlockState(),
+                tag,
+                helper.getLevel().registryAccess());
 
         helper.assertTrue(loaded != null, "block entity should load");
-        BladeData loadedBlade = loaded.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE)
-                .get(ModDataComponents.BLADE_DATA.get());
-        helper.assertTrue(loadedBlade != null && loadedBlade.value() == 240 && loadedBlade.strikes() == 12,
+        BladeData loadedBlade =
+                loaded.inventory().getStackInSlot(ForgeBlockEntity.SLOT_BLADE).get(ModDataComponents.BLADE_DATA.get());
+        helper.assertTrue(
+                loadedBlade != null && loadedBlade.value() == 240 && loadedBlade.strikes() == 12,
                 "blade data should survive");
         helper.assertTrue(loaded.frenzyStrikesLeft() == 2, "frenzy strikes should survive");
         helper.assertTrue(loaded.lastStrikeGameTime() == 42L, "clock should survive");
@@ -247,11 +256,12 @@ public final class ForgeGameTests {
     @GameTest(template = "platform", timeoutTicks = 200)
     public static void recipes_everyInfRecipeLoads(GameTestHelper helper) {
         RecipeManager recipes = helper.getLevel().getServer().getRecipeManager();
-        for (String id : List.of("hammer", "sword_blank", "pickaxe_blank", "axe_blank", "scythe_blank",
-                "dagger_blank", "forge_table")) {
+        for (String id : List.of(
+                "hammer", "sword_blank", "pickaxe_blank", "axe_blank", "scythe_blank", "dagger_blank", "forge_table")) {
             RecipeHolder<?> holder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(Inf.MODID, id))
                     .orElseThrow(() -> new AssertionError("missing recipe " + id));
-            helper.assertTrue(holder.value().getResultItem(helper.getLevel().registryAccess()) != null,
+            helper.assertTrue(
+                    holder.value().getResultItem(helper.getLevel().registryAccess()) != null,
                     "recipe result for " + id);
         }
         helper.succeed();
@@ -261,8 +271,11 @@ public final class ForgeGameTests {
     public static void advancements_allNineteenExist(GameTestHelper helper) {
         for (String id : com.inf.advancement.ForgeAdvancements.allIds()) {
             helper.assertTrue(
-                    helper.getLevel().getServer().getAdvancements()
-                            .get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, id)) != null,
+                    helper.getLevel()
+                                    .getServer()
+                                    .getAdvancements()
+                                    .get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, id))
+                            != null,
                     "missing advancement " + id);
         }
         helper.succeed();
@@ -273,17 +286,23 @@ public final class ForgeGameTests {
         ForgeBlockEntity forge = placeForge(helper, ModItems.SWORD_BLANK.get(), 0);
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         ForgeService.strike(forge, player, 0.999, 50);
-        helper.assertTrue(com.inf.advancement.ForgeAdvancements.done(player,
-                com.inf.advancement.ForgeAdvancements.FIRST_STRIKE), "first_strike should be awarded");
+        helper.assertTrue(
+                com.inf.advancement.ForgeAdvancements.done(player, com.inf.advancement.ForgeAdvancements.FIRST_STRIKE),
+                "first_strike should be awarded");
 
         setBlade(forge, new BladeData(WeaponKind.DAGGER, 1000, 20, 0L));
         helper.assertTrue(ForgeService.stop(forge, player), "banking should succeed");
-        helper.assertTrue(com.inf.advancement.ForgeAdvancements.done(player,
-                com.inf.advancement.ForgeAdvancements.FIRST_WEAPON), "first_weapon should be awarded");
-        helper.assertTrue(com.inf.advancement.ForgeAdvancements.done(player,
-                com.inf.advancement.ForgeAdvancements.tier(WeaponTier.LEGENDARY)), "tier_legendary");
-        helper.assertTrue(com.inf.advancement.ForgeAdvancements.done(player,
-                com.inf.advancement.ForgeAdvancements.kind(WeaponKind.DAGGER)), "kind_dagger");
+        helper.assertTrue(
+                com.inf.advancement.ForgeAdvancements.done(player, com.inf.advancement.ForgeAdvancements.FIRST_WEAPON),
+                "first_weapon should be awarded");
+        helper.assertTrue(
+                com.inf.advancement.ForgeAdvancements.done(
+                        player, com.inf.advancement.ForgeAdvancements.tier(WeaponTier.LEGENDARY)),
+                "tier_legendary");
+        helper.assertTrue(
+                com.inf.advancement.ForgeAdvancements.done(
+                        player, com.inf.advancement.ForgeAdvancements.kind(WeaponKind.DAGGER)),
+                "kind_dagger");
         helper.succeed();
     }
 
@@ -310,7 +329,8 @@ public final class ForgeGameTests {
         return helper.getBlockEntity(TABLE);
     }
 
-    private static ForgeBlockEntity placeForge(GameTestHelper helper, net.minecraft.world.item.Item blade, int hammerDamage) {
+    private static ForgeBlockEntity placeForge(
+            GameTestHelper helper, net.minecraft.world.item.Item blade, int hammerDamage) {
         helper.setBlock(TABLE, ModBlocks.FORGE_TABLE.get());
         ForgeBlockEntity forge = helper.getBlockEntity(TABLE);
         forge.inventory().setStackInSlot(ForgeBlockEntity.SLOT_BLADE, new ItemStack(blade));

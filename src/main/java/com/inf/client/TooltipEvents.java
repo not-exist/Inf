@@ -4,16 +4,15 @@ import com.inf.Inf;
 import com.inf.item.component.BladeData;
 import com.inf.registry.ModDataComponents;
 import com.inf.weapon.WeaponTier;
+import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.minecraft.network.chat.Component;
 
 @EventBusSubscriber(modid = Inf.MODID, value = Dist.CLIENT)
 public final class TooltipEvents {
-    private TooltipEvents() {
-    }
+    private TooltipEvents() {}
 
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent event) {

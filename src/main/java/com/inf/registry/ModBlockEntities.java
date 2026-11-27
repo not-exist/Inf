@@ -17,6 +17,5 @@ public final class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(ForgeBlockEntity::new, ModBlocks.FORGE_TABLE.get())
                             .build(null));
 
-    private ModBlockEntities() {
-    }
+    private ModBlockEntities() {}
 }

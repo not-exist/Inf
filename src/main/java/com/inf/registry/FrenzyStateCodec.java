@@ -14,6 +14,5 @@ public final class FrenzyStateCodec {
                     Codec.BOOL.optionalFieldOf("ready", false).forGetter(FrenzyState::ready))
             .apply(instance, FrenzyState::new));
 
-    private FrenzyStateCodec() {
-    }
+    private FrenzyStateCodec() {}
 }

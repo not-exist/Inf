@@ -36,10 +36,12 @@ class ResourceLintTest {
             JsonObject display = entry.getValue().getAsJsonObject("display");
             assertNotNull(display, entry.getKey() + " has no display");
             assertLangKey(display.getAsJsonObject("title").get("translate").getAsString());
-            assertLangKey(display.getAsJsonObject("description").get("translate").getAsString());
+            assertLangKey(
+                    display.getAsJsonObject("description").get("translate").getAsString());
             String icon = display.getAsJsonObject("icon").get("id").getAsString();
             if (icon.startsWith("inf:")) {
-                assertTrue(Files.exists(ASSETS.resolve("models/item/" + icon.substring(4) + ".json")),
+                assertTrue(
+                        Files.exists(ASSETS.resolve("models/item/" + icon.substring(4) + ".json")),
                         entry.getKey() + " icon " + icon + " has no item model");
             } else {
                 assertTrue(icon.startsWith("minecraft:"), entry.getKey() + " icon namespace");
@@ -104,7 +106,8 @@ class ResourceLintTest {
     void everyModelTextureExistsAndStaysInTheInfNamespace() throws IOException {
         try (Stream<Path> models = Files.walk(ASSETS.resolve("models"))) {
             for (Path model : models.filter(p -> p.toString().endsWith(".json")).toList()) {
-                JsonObject json = JsonParser.parseString(Files.readString(model)).getAsJsonObject();
+                JsonObject json =
+                        JsonParser.parseString(Files.readString(model)).getAsJsonObject();
                 if (!json.has("textures")) {
                     continue;
                 }
@@ -113,7 +116,8 @@ class ResourceLintTest {
                     String reference = textures.get(key).getAsString();
                     assertFalse(reference.startsWith("minecraft:"), model + " references " + reference);
                     String path = reference.contains(":") ? reference.split(":", 2)[1] : reference;
-                    assertTrue(Files.exists(ASSETS.resolve("textures").resolve(path + ".png")),
+                    assertTrue(
+                            Files.exists(ASSETS.resolve("textures").resolve(path + ".png")),
                             model + " missing texture " + reference);
                 }
             }
@@ -166,7 +170,8 @@ class ResourceLintTest {
 
     private static int countFiles(Path dir, String name) {
         try (Stream<Path> files = Files.walk(dir)) {
-            return (int) files.filter(p -> p.getFileName().toString().equals(name)).count();
+            return (int)
+                    files.filter(p -> p.getFileName().toString().equals(name)).count();
         } catch (IOException e) {
             throw new AssertionError(e);
         }

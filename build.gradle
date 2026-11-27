@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'jacoco'
+    id 'com.diffplug.spotless' version '8.12.0'
     id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
@@ -37,6 +38,26 @@ sourceSets {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    mavenCentral()
+}
+
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        palantirJavaFormat('2.103.0')
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'misc', {
+        target '*.gradle', '*.md', '.gitignore', '.gitattributes', '.editorconfig'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'json', {
+        target 'src/**/*.json'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 base {

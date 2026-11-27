@@ -20,8 +20,7 @@ public final class ForgeAdvancements {
     public static final String FRENZY = "frenzy";
     public static final String ALL_KINDS = "all_kinds";
 
-    private ForgeAdvancements() {
-    }
+    private ForgeAdvancements() {}
 
     public static String kind(WeaponKind kind) {
         return "kind_" + kind.id;
@@ -34,8 +33,15 @@ public final class ForgeAdvancements {
     /** Every static node; {@code kind_*} and {@code tier_*} are generated from the enums. */
     public static List<String> staticIds() {
         return List.of(
-                ROOT, FIRST_STRIKE, FIRST_WEAPON, BREAK_BLADE, DAMAGE_BLADE,
-                GREAT_SUCCESS, HAMMER_BREAK, FRENZY, ALL_KINDS);
+                ROOT,
+                FIRST_STRIKE,
+                FIRST_WEAPON,
+                BREAK_BLADE,
+                DAMAGE_BLADE,
+                GREAT_SUCCESS,
+                HAMMER_BREAK,
+                FRENZY,
+                ALL_KINDS);
     }
 
     public static List<String> allIds() {
@@ -55,9 +61,8 @@ public final class ForgeAdvancements {
         if (player.getServer() == null) {
             return;
         }
-        AdvancementHolder holder = player.getServer()
-                .getAdvancements()
-                .get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, path));
+        AdvancementHolder holder =
+                player.getServer().getAdvancements().get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, path));
         if (holder != null) {
             player.getAdvancements().award(holder, "unlocked");
         }
@@ -67,10 +72,10 @@ public final class ForgeAdvancements {
         if (player.getServer() == null) {
             return false;
         }
-        AdvancementHolder holder = player.getServer()
-                .getAdvancements()
-                .get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, path));
-        return holder != null && player.getAdvancements().getOrStartProgress(holder).isDone();
+        AdvancementHolder holder =
+                player.getServer().getAdvancements().get(ResourceLocation.fromNamespaceAndPath(Inf.MODID, path));
+        return holder != null
+                && player.getAdvancements().getOrStartProgress(holder).isDone();
     }
 
     public static void awardAllKindsIfDone(ServerPlayer player) {

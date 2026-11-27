@@ -40,7 +40,8 @@ public final class ForgeViewModel {
             ForgeBalance balance) {
         int value = blade == null ? 0 : blade.value();
         int strikes = blade == null ? 0 : blade.strikes();
-        ForgeRates rates = blade == null ? new ForgeRates(0, 0, 0, 0) : ForgeRates.of(value, strikes, frenzyActive > 0, balance);
+        ForgeRates rates =
+                blade == null ? new ForgeRates(0, 0, 0, 0) : ForgeRates.of(value, strikes, frenzyActive > 0, balance);
 
         int[] data = new int[SIZE];
         data[VALUE] = value;
