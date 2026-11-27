@@ -41,9 +41,15 @@ jobs:
       - name: Resolve expected vendor name
         id: vendor
         shell: bash
+        # Values reach the script through the environment. Interpolating ${{ }} straight
+        # into a run: block is the classic script-injection shape: it does not matter
+        # that this matrix comes from a literal today, the next person may feed it an
+        # input.
+        env:
+          DISTRIBUTION: ${{ matrix.distribution }}
         run: |
           set -euo pipefail
-          case "${{ matrix.distribution }}" in
+          case "$DISTRIBUTION" in
             temurin)         echo "name=Eclipse Temurin" >> "$GITHUB_OUTPUT" ;;
             # Oracle ships both as "Oracle"; the toolchain metadata does not distinguish
             # the Oracle JDK from Oracle OpenJDK builds.
@@ -72,9 +78,11 @@ jobs:
       # Proves the compile above used the vendor this job installed. Without it
       # a foojay-resolved Temurin JDK would satisfy every job in the matrix.
       - name: Assert the Gradle toolchain vendor
+        env:
+          EXPECTED_VENDOR: ${{ steps.vendor.outputs.name }}
         run: >
           ./gradlew --no-daemon --stacktrace --console=plain verifyToolchain
-          -PexpectedJdkVendor="${{ steps.vendor.outputs.name }}"
+          -PexpectedJdkVendor="$EXPECTED_VENDOR"
 
       - name: Upload Gradle problems report
         if: failure()

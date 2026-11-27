@@ -1,0 +1,19 @@
+# zizmor configuration.
+#
+# `self-repository` asks for GitHub's `$/...` syntax when a workflow references an
+# action or reusable workflow in the same repository. That syntax landed in July
+# 2026, and actionlint 1.7.12 — the version the Lint / Workflows check pins —
+# rejects it outright:
+#
+#   specifying action "$/.github/actions/foo" in invalid format because ref is
+#   missing
+#
+# Adopting it would mean either dropping the actionlint gate or upgrading it and
+# hoping it learns the syntax, in exchange for one saved checkout per job that
+# already checks out. The relative form keeps both gates green, so the rule is off
+# deliberately rather than silently.
+#
+# Revisit when actionlint accepts `$/`; the fix at that point is mechanical.
+rules:
+  self-repository:
+    disable: true

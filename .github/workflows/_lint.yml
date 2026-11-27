@@ -33,6 +33,8 @@ jobs:
         with:
           inputs: .github
           persona: pedantic
+          # Only self-repository is suppressed there, with the reason in the file.
+          config: .github/zizmor.yml
 
   repository:
     name: Repository
